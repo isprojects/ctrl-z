@@ -1,0 +1,13 @@
+[run]
+branch = True
+source = ctrl_z/
+omit =
+
+[report]
+omit =
+    */tests/*
+    *tests.py
+exclude_lines =
+    pragma: no cover
+    noqa
+    NOQA
