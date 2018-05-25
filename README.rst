@@ -19,7 +19,11 @@ Features
 ========
 
 * Supports Linux, Windows, MacOS
-* Django project inspection
+* Django project inspection:
+
+    * backs up configured databases using ``settings.DATABASES``
+    * backs up file directories such as ``settings.MEDIA_ROOT``
+
 * YAML-based, minimal configuration
 * Simple Python/CLI APIs for backup creation and restoration
 
