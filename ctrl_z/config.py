@@ -1,10 +1,17 @@
 import logging
+import os
 
 import yaml
 
 from .retention import RetentionPolicy
 
 logger = logging.getLogger(__name__)
+
+
+DEFAULT_CONFIG_FILE = os.path.join(
+    os.path.dirname(__file__),
+    'config.default.yml'
+)
 
 
 class Config:

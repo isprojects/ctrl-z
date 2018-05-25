@@ -1,0 +1,35 @@
+---
+
+# Default config.yml file - sane defaults for Linux systems
+# Used as a starting point for a custom backup file
+
+# Base location to store backups
+base_dir: /var/backups/
+
+logging:
+  filename: backup.log
+  level: INFO
+
+retention_policy:
+  day_of_week: 0  # day of week to keep, 0 is Monday
+  days_to_keep: 7
+  weeks_to_keep: 4
+
+report:
+  enabled: yes
+  to:
+    - root@localhost
+
+database:
+  test_function: ctrl_z.db_restore.test_migrations_table
+
+# Options for uploaded files (media, private_media)
+files:
+  overwrite_existing_directory: yes
+  # setting names pointing to directories that need to be backed up
+  directories:
+    - MEDIA_ROOT
+
+# Which binaries to use for backup creation/restore
+pg_dump_binary: /usr/bin/pg_dump
+pg_restore_binary: /usr/bin/pg_restore
