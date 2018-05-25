@@ -30,12 +30,34 @@ class readable_dir(argparse.Action):
 
 
 class CLI:
+    """
+    Core CLI implementation.
+
+    Requires the developer to set up the python path correctly so that django
+    can initialize properly.
+
+    Example usage::
+
+        >>> from ctrl_z import cli
+        >>> def setup():
+        ...     sys.path.insert(1, '/path/to/my/project/root/')
+        ...     from myproject.setup import setup_env
+        ...     setup_env()
+        ...
+        >>> cli.setup = setup
+        >>> if __name__ == '__main__':
+        ...     cli(config_file='/path/to/backup/config.yml')
+
+    """
 
     setup = noop
     stdout = sys.stdout
 
     def __init__(self):
         parser = argparse.ArgumentParser(description="CTRL-Z CLI")
+        parser.add_argument(
+            '--config-file', help="Config file to use"
+        )
 
         subparsers = parser.add_subparsers(help="Sub commands", dest='subcommand')
 
@@ -57,8 +79,8 @@ class CLI:
         )
         parser_backup.add_argument(
             '--skip-db', nargs='+',
-            help='Database aliases to skip - use multiple times for each alias'
-                 'to skip'
+            help='Database aliases to skip - use multiple times for each '
+                 'alias to skip'
         )
         parser_backup.add_argument(
             '--no-files', dest='backup_files', action='store_false',
@@ -80,8 +102,8 @@ class CLI:
         )
         parser_restore.add_argument(
             '--skip-db', nargs='+',
-            help='Database aliases to skip - use multiple times for each alias'
-                 'to skip'
+            help='Database aliases to skip - use multiple times for each '
+                 'alias to skip'
         )
         parser_restore.add_argument(
             '--no-files', dest='restore_files', action='store_false',
