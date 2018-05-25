@@ -24,6 +24,7 @@ Features
     * backs up configured databases using ``settings.DATABASES``
     * backs up file directories such as ``settings.MEDIA_ROOT``
 
+* stdlib ``logging`` based reporting + e-mailing of backup/restore report
 * YAML-based, minimal configuration
 * Simple Python/CLI APIs for backup creation and restoration
 

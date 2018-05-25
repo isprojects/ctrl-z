@@ -72,7 +72,7 @@ class RetentionPolicy:
         to_delete = []
         for dir_name in os.listdir(base):
             if not self.is_backup_dir(dir_name):
-                logger.debug("%s doesn't look like a back directory, keeping it.", dir_name)
+                logger.debug("%s doesn't look like a backup directory, keeping it.", dir_name)
                 continue
 
             if dir_name in to_keep:
