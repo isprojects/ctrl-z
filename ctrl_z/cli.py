@@ -140,16 +140,19 @@ class CLI:
     def run(self, options, config_file: str):
         subcommand = options.subcommand
 
-        self._backup = Backup.from_config(config_file)
+        if subcommand == 'restore':
+            self._backup = Backup.prepare_restore(config_file, options.backup_dir)
+        else:
+            self._backup = Backup.from_config(config_file)
 
         configure_logging(self._backup.config)
 
         if subcommand == 'generate_config':
             self.generate_config(options)
         elif subcommand == 'backup':
-            self.backup(options, config_file)
+            self.backup(options)
         elif subcommand == 'restore':
-            self.restore(options, config_file)
+            self.restore(options)
         else:
             self.parser.print_help()
 
@@ -167,7 +170,7 @@ class CLI:
         else:
             self.stdout.write(config)
 
-    def backup(self, options, config_file):
+    def backup(self, options):
         backup_db = options.backup_db
         skip_db = options.skip_db
         backup_files = options.backup_files
@@ -181,6 +184,24 @@ class CLI:
         except Exception:
             has_errors = True
             logger.exception("Backup failed")
+            raise
+        finally:
+            backup.report(has_errors)
+
+    def restore(self, options):
+        restore_db = options.restore_db
+        skip_db = options.skip_db
+        restore_files = options.restore_files
+
+        backup = self._backup
+
+        # perform the restore
+        has_errors = False
+        try:
+            backup.restore(db=restore_db, skip_db=skip_db, files=restore_files)
+        except Exception:
+            has_errors = True
+            logger.exception("Restore failed")
             raise
         finally:
             backup.report(has_errors)

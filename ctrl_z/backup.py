@@ -36,11 +36,13 @@ class Backup:
         config = Config.from_file(config_file, base_dir=base_dir, restore=True)
         return cls(config=config)
 
-    def restore(self):
+    def restore(self, db=True, skip_db=None, files=True):
         logger.info("Starting restore of %s", self.base_dir)
 
-        self.restore_files()
-        self.restore_databases()
+        if files:
+            self.restore_files()
+        if db:
+            self.restore_databases(skip_db=skip_db)
 
         logger.info("Finished restore of %s", self.base_dir)
 
@@ -109,9 +111,11 @@ class Backup:
                 continue
             self._backup_database(db_config)
 
-    def restore_databases(self):
+    def restore_databases(self, skip_db=None):
         logger.info("Restoring%d databases", len(settings.DATABASES))
         for alias, db_config in settings.DATABASES.items():
+            if skip_db and alias in skip_db:
+                continue
             self._restore_database(alias, db_config)
 
     def files(self):
