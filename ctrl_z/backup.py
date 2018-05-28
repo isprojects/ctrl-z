@@ -60,15 +60,22 @@ class Backup:
             logger.debug("Creating directory %s", path)
             os.makedirs(path)
 
-    def full(self):
+    def full(self, db=True, skip_db=None, files=True):
         """
         Run all the components of the full backup.
+
+        :param db: whether to backup database(s) or not
+        :param skip_db: if backing up databases, aliases of the db's NOT to
+          backup
+        :param files: whether to backup (uploaded) files or not
         """
         logger.info("Performing full backup")
         self.rotate()
         self.create_directories()
-        self.databases()
-        self.files()
+        if db:
+            self.databases(skip_db=skip_db)
+        if files:
+            self.files()
         logger.info("Full backup completed")
 
     def report(self, has_errors: bool):
@@ -90,12 +97,16 @@ class Backup:
         subject = f"Backup {now} failed" if has_errors else f"Backup {now} succeeded"
         send_mail(subject, log_content, settings.DEFAULT_FROM_EMAIL, recipients)
 
-    def databases(self):
+    def databases(self, skip_db=None):
         """
         Backup all the databases used.
+
+        :param skip_db: list of db aliases to skip
         """
         logger.info("Backing up %d databases", len(settings.DATABASES))
-        for db_config in settings.DATABASES.values():
+        for alias, db_config in settings.DATABASES.items():
+            if skip_db and alias in skip_db:
+                continue
             self._backup_database(db_config)
 
     def restore_databases(self):

@@ -2,12 +2,16 @@
 Command line interface for CTRL-Z
 """
 import argparse
+import logging
 import os
 import sys
 
 import django
 
+from .backup import Backup, configure_logging
 from .config import DEFAULT_CONFIG_FILE
+
+logger = logging.getLogger(__name__)
 
 
 def noop():
@@ -52,6 +56,7 @@ class CLI:
 
     setup = noop
     stdout = sys.stdout
+    _backup = None
 
     def __init__(self):
         parser = argparse.ArgumentParser(description="CTRL-Z CLI")
@@ -122,23 +127,31 @@ class CLI:
 
         self._setup()
 
-        self.run(config_file)
+        args = self.parser.parse_args()
+        config_file = args.config_file or config_file
+
+        self.run(args, config_file)
 
     def _setup(self):
         self.stdout.write("Initializing...\n\n")
         self.setup()
         django.setup()
 
-    def run(self, config_file: str):
-        args = self.parser.parse_args()
+    def run(self, options, config_file: str):
+        subcommand = options.subcommand
 
-        subcommand = args.subcommand
+        self._backup = Backup.from_config(config_file)
+
+        configure_logging(self._backup.config)
+
         if subcommand == 'generate_config':
-            self.generate_config(args)
+            self.generate_config(options)
         elif subcommand == 'backup':
-            self.backup(args, config_file)
+            self.backup(options, config_file)
         elif subcommand == 'restore':
-            self.restore(args, config_file)
+            self.restore(options, config_file)
+        else:
+            self.parser.print_help()
 
     def generate_config(self, options):
         """
@@ -153,6 +166,24 @@ class CLI:
                 outfile.write(config)
         else:
             self.stdout.write(config)
+
+    def backup(self, options, config_file):
+        backup_db = options.backup_db
+        skip_db = options.skip_db
+        backup_files = options.backup_files
+
+        backup = self._backup
+
+        # perform the backup
+        has_errors = False
+        try:
+            backup.full(db=backup_db, skip_db=skip_db, files=backup_files)
+        except Exception:
+            has_errors = True
+            logger.exception("Backup failed")
+            raise
+        finally:
+            backup.report(has_errors)
 
 
 cli = CLI()
