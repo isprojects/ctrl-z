@@ -10,12 +10,7 @@ from io import StringIO
 import pytest
 
 from ctrl_z import cli
-from ctrl_z.config import DEFAULT_CONFIG_FILE, Config
-
-
-def _write_config_file(path: str, **overrides):
-    config = Config.from_file(DEFAULT_CONFIG_FILE, **overrides)
-    config.write_to(path)
+from ctrl_z.config import DEFAULT_CONFIG_FILE
 
 
 def test_config_generation():
@@ -39,11 +34,11 @@ def test_config_generation_external_file(tmpdir):
             assert config.read() == default_config.read()
 
 
-def test_full_backup(tmpdir, settings):
+def test_full_backup(tmpdir, settings, config_writer):
     config_path = str(tmpdir.join('config.yml'))
     backups_base = tmpdir.join('backups')
 
-    _write_config_file(config_path, base_dir=str(backups_base))
+    config_writer(config_path, base_dir=str(backups_base))
 
     # prevent actual db access
     with warnings.catch_warnings():
@@ -66,14 +61,14 @@ def test_full_backup(tmpdir, settings):
     assert sorted(subdirs) == ['backup.log', 'db', 'files']
 
 
-def test_full_restore(tmpdir, settings):
+def test_full_restore(tmpdir, settings, config_writer):
     config_path = str(tmpdir.join('config.yml'))
     backups_base = tmpdir.mkdir('backups')
     backup_dir = backups_base.mkdir('2018-05-29-daily')
     backup_dir.mkdir('db')
     backup_dir.mkdir('files')
 
-    _write_config_file(config_path, base_dir=str(backups_base))
+    config_writer(config_path, base_dir=str(backups_base))
 
     # prevent actual db access
     with warnings.catch_warnings():

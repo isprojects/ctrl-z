@@ -145,16 +145,24 @@ class Backup:
         Rotate the existing backups according to the retention policy.
         """
         logger.info("Rotating backups")
-        self.config.retention_policy.rotate(self.config.base_dir)
+        rotate_base = os.path.dirname(self.config.base_dir)
+        self.config.retention_policy.rotate(rotate_base)
+
+    def _get_conn_params(self, db_config: dict) -> tuple:
+        host = db_config.get('HOST', '') or 'localhost'
+        port = db_config.get('PORT', '') or 5432
+        name = db_config['NAME']
+        return host, port, name
+
+    def _get_db_filename(self, db_config: dict) -> str:
+        host, port, name = self._get_conn_params(db_config)
+        return f"{host}.{port}.{name}.custom"
 
     def _backup_database(self, db_config: dict):
         program = self.config.pg_dump_binary
-
-        host = db_config['HOST']
-        port = db_config.get('PORT', '') or 5432
-        name = db_config['NAME']
-
-        outfile = os.path.join(self.db_dir, f"{host}.{port}.{name}.custom")
+        host, port, name = self._get_conn_params(db_config)
+        filename = self._get_db_filename(db_config)
+        outfile = os.path.join(self.db_dir, filename)
 
         args = [
             program,
@@ -189,11 +197,9 @@ class Backup:
     def _restore_database(self, alias: str, db_config: dict):
         program = self.config.pg_restore_binary
 
-        host = db_config['HOST']
-        port = db_config.get('PORT', '') or 5432
-        name = db_config['NAME']
-
-        backup_file = os.path.join(self.db_dir, f"{host}.{port}.{name}.custom")
+        host, port, name = self._get_conn_params(db_config)
+        filename = self._get_db_filename(db_config)
+        backup_file = os.path.join(self.db_dir, filename)
 
         args = [
             program,
