@@ -1,0 +1,39 @@
+language: python
+cache: pip
+
+sudo: false
+
+python:
+  - "3.6"
+
+services:
+  - postgresql
+
+addons:
+  postgresql: "9.5"
+
+env:
+  - PGUSER=postgres
+  - DJANGO=2.0
+
+matrix:
+  fast_finish: true
+  include:
+    - { python: "3.6", env: DJANGO=2.0 }
+    - { python: "3.6", env: TOXENV=isort }
+
+install:
+  - pip install codecov tox tox-travis
+
+before_script:
+  - psql -c 'create database ctrlz;' -U postgres
+  - psql -c 'create database ctrlz2;' -U postgres
+
+script:
+  - tox
+
+after_success:
+  - codecov -e TOXENV,DJANGO
+
+notifications:
+  email: false
