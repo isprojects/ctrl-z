@@ -245,6 +245,10 @@ class Backup:
                 logger.info("Skipping %s", dest)
                 return
 
+        if not os.path.exists(directory):
+            logger.info("Source directory %s does not exist, skipping", directory)
+            return
+
         shutil.copytree(directory, dest)
 
         logger.info("Backed up %s to %s", directory, dest)
@@ -252,6 +256,9 @@ class Backup:
     def _restore_directory(self, dest: str):
         dirname = os.path.basename(dest)
         src = os.path.join(self.files_dir, dirname)
+        if not os.path.exists(src):
+            logger.info("Not restoring %s - directory doesn't exist!", src)
+            return
 
         logger.info("Restoring %s to %s", src, dest)
 

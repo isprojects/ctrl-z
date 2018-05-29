@@ -14,7 +14,7 @@ from .config import DEFAULT_CONFIG_FILE
 logger = logging.getLogger(__name__)
 
 
-def noop():
+def noop(*args, **kwargs):
     pass
 
 
@@ -56,15 +56,17 @@ class CLI:
 
     setup = noop
     stdout = sys.stdout
+    stderr = sys.stderr
     _backup = None
 
     def __init__(self):
         parser = argparse.ArgumentParser(description="CTRL-Z CLI")
-        parser.add_argument(
-            '--config-file', help="Config file to use"
-        )
+        parser.add_argument('--config-file', help="Config file to use")
+        parser.add_argument('--base-dir', help="Base directory override")
 
-        subparsers = parser.add_subparsers(help="Sub commands", dest='subcommand')
+        subparsers = parser.add_subparsers(
+            help="Sub commands", dest='subcommand'
+        )
 
         # config file generation
         parser_gen_config = subparsers.add_parser(
@@ -117,33 +119,44 @@ class CLI:
 
         self.parser = parser
 
-    def __call__(self, config_file: str=DEFAULT_CONFIG_FILE, stdout=None):
+    def __call__(self, args=None, config_file: str=DEFAULT_CONFIG_FILE, stdout=None, stderr=None):
         from . import __version__
 
         if stdout:
             self.stdout = stdout
 
-        self.stdout.write(f"CTRL-Z {__version__} - Backup and recovery tool\n")
+        if stderr:
+            self.stderr = stderr
+
+        self.stderr.write(f"CTRL-Z {__version__} - Backup and recovery tool\n")
+
+        args = self.parser.parse_args(args or sys.argv[1:])
+        config_file = args.config_file or config_file
 
         self._setup()
-
-        args = self.parser.parse_args()
-        config_file = args.config_file or config_file
 
         self.run(args, config_file)
 
     def _setup(self):
-        self.stdout.write("Initializing...\n\n")
+        self.stderr.write("Initializing...\n\n")
         self.setup()
         django.setup()
 
     def run(self, options, config_file: str):
         subcommand = options.subcommand
+        conf_overrides = {}
+        if options.base_dir:
+            conf_overrides['base_dir'] = options.base_dir
 
         if subcommand == 'restore':
-            self._backup = Backup.prepare_restore(config_file, options.backup_dir)
+            self._backup = Backup.prepare_restore(
+                config_file, options.backup_dir
+            )
         else:
-            self._backup = Backup.from_config(config_file)
+            self._backup = Backup.from_config(
+                config_file,
+                **conf_overrides
+            )
 
         configure_logging(self._backup.config)
 

@@ -52,6 +52,14 @@ class Config:
         config.update(overrides)
         return cls(**config)
 
+    def write_to(self, path: str):
+        as_dict = {key: getattr(self, key) for key in self.__slots__}
+        if not self.restore:
+            as_dict['base_dir'] = os.path.dirname(as_dict['base_dir'])
+        as_dict['retention_policy'] = as_dict['retention_policy'].serialize()
+        with open(path, 'w') as stream:
+            yaml.dump(as_dict, stream=stream)
+
     def set_base_dir(self):
         if self.restore:  # should be set via overrides
             return
