@@ -203,8 +203,9 @@ class Backup:
 
         args = [
             program,
-            f"-d{name}",
+            f"-dpostgres",
             '-c',  # clean -- drop objects before recreating
+            '-C',  # create the database
             backup_file
         ]
 
