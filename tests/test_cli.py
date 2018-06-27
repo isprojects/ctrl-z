@@ -13,8 +13,8 @@ from ctrl_z import cli
 from ctrl_z.config import DEFAULT_CONFIG_FILE
 
 
-def test_config_generation():
-    cli(['generate_config'], stdout=StringIO())
+def test_config_generation(config_path):
+    cli(['generate_config'], stdout=StringIO(), config_file=config_path)
 
     cli.stdout.seek(0)
     result = cli.stdout.read()
@@ -22,10 +22,13 @@ def test_config_generation():
         assert result == default_config.read()
 
 
-def test_config_generation_external_file(tmpdir):
+def test_config_generation_external_file(tmpdir, config_path):
     tempfile = str(tmpdir.join("some_config.yml"))
 
-    cli(['generate_config', '-o', tempfile], stdout=StringIO())
+    cli(
+        ['generate_config', '-o', tempfile],
+        stdout=StringIO(), config_file=config_path
+    )
 
     cli.stdout.seek(0)
     assert cli.stdout.read() == ''

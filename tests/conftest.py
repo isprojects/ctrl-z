@@ -41,3 +41,14 @@ def config_writer(tmpdir):
         config = Config.from_file(DEFAULT_CONFIG_FILE, **overrides)
         config.write_to(path)
     return writer
+
+
+@pytest.fixture
+def config_path(tmpdir, config_writer):
+    """
+    Generate a config with a writable base.
+    """
+    config_path = str(tmpdir.join('config.yml'))
+    backups_base = tmpdir.join('backups')
+    config_writer(config_path, base_dir=str(backups_base))
+    return config_path
