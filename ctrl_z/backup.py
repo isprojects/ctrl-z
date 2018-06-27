@@ -145,16 +145,24 @@ class Backup:
         Rotate the existing backups according to the retention policy.
         """
         logger.info("Rotating backups")
-        self.config.retention_policy.rotate(self.config.base_dir)
+        rotate_base = os.path.dirname(self.config.base_dir)
+        self.config.retention_policy.rotate(rotate_base)
+
+    def _get_conn_params(self, db_config: dict) -> tuple:
+        host = db_config.get('HOST', '') or 'localhost'
+        port = db_config.get('PORT', '') or 5432
+        name = db_config['NAME']
+        return host, port, name
+
+    def _get_db_filename(self, db_config: dict) -> str:
+        host, port, name = self._get_conn_params(db_config)
+        return f"{host}.{port}.{name}.custom"
 
     def _backup_database(self, db_config: dict):
         program = self.config.pg_dump_binary
-
-        host = db_config['HOST']
-        port = db_config.get('PORT', '') or 5432
-        name = db_config['NAME']
-
-        outfile = os.path.join(self.db_dir, f"{host}.{port}.{name}.custom")
+        host, port, name = self._get_conn_params(db_config)
+        filename = self._get_db_filename(db_config)
+        outfile = os.path.join(self.db_dir, filename)
 
         args = [
             program,
@@ -189,16 +197,15 @@ class Backup:
     def _restore_database(self, alias: str, db_config: dict):
         program = self.config.pg_restore_binary
 
-        host = db_config['HOST']
-        port = db_config.get('PORT', '') or 5432
-        name = db_config['NAME']
-
-        backup_file = os.path.join(self.db_dir, f"{host}.{port}.{name}.custom")
+        host, port, name = self._get_conn_params(db_config)
+        filename = self._get_db_filename(db_config)
+        backup_file = os.path.join(self.db_dir, filename)
 
         args = [
             program,
-            f"-d{name}",
+            f"-dpostgres",
             '-c',  # clean -- drop objects before recreating
+            '-C',  # create the database
             backup_file
         ]
 
@@ -245,6 +252,10 @@ class Backup:
                 logger.info("Skipping %s", dest)
                 return
 
+        if not os.path.exists(directory):
+            logger.info("Source directory %s does not exist, skipping", directory)
+            return
+
         shutil.copytree(directory, dest)
 
         logger.info("Backed up %s to %s", directory, dest)
@@ -252,6 +263,9 @@ class Backup:
     def _restore_directory(self, dest: str):
         dirname = os.path.basename(dest)
         src = os.path.join(self.files_dir, dirname)
+        if not os.path.exists(src):
+            logger.info("Not restoring %s - directory doesn't exist!", src)
+            return
 
         logger.info("Restoring %s to %s", src, dest)
 

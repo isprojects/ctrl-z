@@ -1,0 +1,50 @@
+language: python
+cache: pip
+
+sudo: false
+
+python:
+  - "3.6"
+
+services:
+  - postgresql
+
+addons:
+  postgresql: "10"
+  apt:
+    packages:
+    - postgresql-10
+    - postgresql-client-10
+
+env:
+  global:
+    - PGPORT=5433
+    - PGUSER=travis
+    - PGPASSWORD=travis
+  matrix:
+    - DJANGO=2.0
+
+matrix:
+  fast_finish: true
+  include:
+    - { python: "3.6", env: DJANGO=2.0 }
+    - { python: "3.6", env: TOXENV=isort }
+    - { python: "3.6", env: TOXENV=docs }
+
+install:
+  - pip install tox tox-travis
+
+before_script:
+  - psql -c 'create database ctrlz;' -U travis
+  - psql -c 'create database ctrlz2;' -U travis
+  - psql -c "ALTER USER travis WITH PASSWORD 'travis';"
+
+script:
+  - tox
+
+after_success:
+  - pip install codecov
+  - codecov -e TOXENV,DJANGO
+
+notifications:
+  email: false

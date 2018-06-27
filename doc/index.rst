@@ -1,44 +1,56 @@
-==========================================
-CTRL-Z - A Django backup and recovery tool
-==========================================
+.. CTRL-Z documentation master file, created by
+   sphinx-quickstart on Tue Jun 27 15:38:51 2018.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Welcome to CTRL-Z's documentation!
+===========================================
+
+|build-status| |requirements| |coverage|
+
+|python-versions| |django-versions| |pypi-version|
 
 CTRL-Z (control-zee) is a backup and recovery tool for Django projects.
 
 Its goals are to be operating system agnostic in creating and restoring backups,
 while being flexible through a yaml configuration file.
 
-|build-status| |requirements| |coverage|
 
-|python-versions| |django-versions| |pypi-version|
+Installation
+============
 
-.. note:: Warning: currently only PostgreSQL is supported
+Requirements
+------------
 
-.. contents::
+* Python 3.6 or higher
+* setuptools 30.3.0 or higher
+* PostgreSQL
 
-.. section-numbering::
+Install
+-------
 
-Features
-========
+.. code-block:: bash
 
-* Supports Linux, Windows, MacOS
-* Django project inspection:
+    pip install ctrl-z
 
-    * backs up configured databases using ``settings.DATABASES``
-    * backs up file directories such as ``settings.MEDIA_ROOT`` (configurable)
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
 
-* stdlib ``logging`` based reporting + e-mailing of backup/restore report
-* YAML-based, minimal configuration
-* Simple Python/CLI APIs for backup creation and restoration
+   quickstart
+   configuration
 
-Installation and usage
-======================
 
-See the `documentation`_.
 
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
 
 .. |build-status| image:: https://travis-ci.org/isprojects/ctrl-z.svg?branch=develop
     :target: https://travis-ci.org/isprojects/ctrl-z
-    :alt: Build status
 
 .. |requirements| image:: https://requires.io/github/isprojects/ctrl-z/requirements.svg?branch=develop
     :target: https://requires.io/github/isprojects/ctrl-z/requirements/?branch=develop
@@ -55,4 +67,5 @@ See the `documentation`_.
 .. |pypi-version| image:: https://img.shields.io/pypi/v/ctrl-z.svg
     :target: https://pypi.org/project/ctrl-z/
 
-.. _documentation: https://readthedocs.org#TODO
+.. _sendfile: https://pypi.org/project/django-sendfile2/
+

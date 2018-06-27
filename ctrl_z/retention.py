@@ -23,6 +23,9 @@ class RetentionPolicy:
         for key, value in config.items():
             setattr(self, key, value)
 
+    def serialize(self):
+        return {key: getattr(self, key) for key in self.__slots__}
+
     def is_backup_dir(self, dir_name: str) -> bool:
         """
         Test if a directory name fits the pattern of backup folder names.
