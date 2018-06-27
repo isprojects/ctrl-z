@@ -15,6 +15,7 @@ __pycache__/
 /.tox
 /.pytest_cache
 /reports
+coverage.xml
 
 # IDE's/editors
 .idea/

@@ -13,8 +13,10 @@ addons:
   postgresql: "9.5"
 
 env:
-  - PGUSER=postgres
-  - DJANGO=2.0
+  global:
+    - PGUSER=postgres
+  matrix:
+    - DJANGO=2.0
 
 matrix:
   fast_finish: true
@@ -23,7 +25,7 @@ matrix:
     - { python: "3.6", env: TOXENV=isort }
 
 install:
-  - pip install codecov tox tox-travis
+  - pip install tox tox-travis
 
 before_script:
   - psql -c 'create database ctrlz;' -U postgres
@@ -33,6 +35,7 @@ script:
   - tox
 
 after_success:
+  - pip install codecov
   - codecov -e TOXENV,DJANGO
 
 notifications:
