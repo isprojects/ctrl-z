@@ -27,7 +27,8 @@ def pytest_configure():
                 'PORT': os.getenv('PGPORT', 5432),
             }
         },
-        MEDIA_ROOT=tempfile.mkdtemp()
+        MEDIA_ROOT=tempfile.mkdtemp(),
+        INSTALLED_APPS=['django.contrib.contenttypes'],
     )
 
 
