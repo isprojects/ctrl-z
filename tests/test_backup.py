@@ -1,3 +1,5 @@
+import os
+
 from ctrl_z import Backup
 
 
@@ -17,6 +19,26 @@ def test_backup_no_db(tmpdir, settings, config_writer):
 
     # expected no database
     assert backup_dir.join('db').listdir() == []
+
+
+def test_backup_files_overwrite_target(tmpdir, settings, config_writer):
+    settings.MEDIA_ROOT = str(tmpdir.mkdir('media'))
+
+    tmpdir.join('media', 'some_file.txt').write('to check')
+
+    config_writer()
+    backup = Backup.from_config(str(tmpdir.join('config.yml')))
+
+    media_backup = os.path.join(backup.config.base_dir, 'files', 'media')
+    os.makedirs(media_backup)
+
+    with open(os.path.join(media_backup, 'other_file.txt'), 'w') as _other:
+        _other.write('to overwrite')
+
+    backup.full(db=False, files=True)
+
+    backup_dir = tmpdir.join('backups').listdir()[0]
+    assert len(backup_dir.join('files', 'media').listdir()) == 1
 
 
 def test_backup_skip_db(tmpdir, settings, config_writer):
