@@ -3,6 +3,7 @@ Integration tests for the command line interface implementation.
 """
 import argparse
 import os
+import sys
 import warnings
 from datetime import datetime
 from io import StringIO
@@ -88,6 +89,16 @@ def test_full_restore(tmpdir, settings, config_writer):
 def test_full_restore_bad_directory():
     with pytest.raises(argparse.ArgumentTypeError):
         cli(args=['restore', '/i/dont/exist/'], stdout=StringIO())
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="does not run on windows")
+def test_full_restore_bad_directory2(tmpdir):
+    bad_permissions_dir = str(tmpdir.mkdir('nope'))
+    os.chmod(bad_permissions_dir, 0o000)
+
+    with pytest.raises(argparse.ArgumentTypeError):
+        cli(args=['restore', bad_permissions_dir], stdout=StringIO())
 
 
 def test_full_restore_not_directory(tmpdir):
