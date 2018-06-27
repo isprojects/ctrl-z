@@ -21,3 +21,6 @@ coverage.xml
 .idea/
 /.vscode
 /.history
+
+# docs
+doc/_build
