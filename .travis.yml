@@ -19,7 +19,8 @@ addons:
 env:
   global:
     - PGPORT=5433
-    - PGUSER=postgres
+    - PGUSER=travis
+    - PGPASSWORD=travis
   matrix:
     - DJANGO=2.0
 
@@ -34,8 +35,9 @@ install:
   - pip install tox tox-travis
 
 before_script:
-  - psql -c 'create database ctrlz;' -U postgres
-  - psql -c 'create database ctrlz2;' -U postgres
+  - psql -c 'create database ctrlz;' -U travis
+  - psql -c 'create database ctrlz2;' -U travis
+  - psql -c "ALTER USER travis WITH PASSWORD 'travis';"
 
 script:
   - tox
