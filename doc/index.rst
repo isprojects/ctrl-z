@@ -16,30 +16,12 @@ Its goals are to be operating system agnostic in creating and restoring backups,
 while being flexible through a yaml configuration file.
 
 
-Installation
-============
-
-Requirements
-------------
-
-* Python 3.6 or higher
-* setuptools 30.3.0 or higher
-* PostgreSQL
-
-Install
--------
-
-.. code-block:: bash
-
-    pip install ctrl-z
-
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    quickstart
    configuration
-
 
 
 Indices and tables

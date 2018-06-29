@@ -7,7 +7,7 @@ CTRL-Z (control-zee) is a backup and recovery tool for Django projects.
 Its goals are to be operating system agnostic in creating and restoring backups,
 while being flexible through a yaml configuration file.
 
-|build-status| |requirements| |coverage|
+|build-status| |requirements| |coverage| |docs|
 
 |python-versions| |django-versions| |pypi-version|
 
@@ -55,4 +55,8 @@ See the `documentation`_.
 .. |pypi-version| image:: https://img.shields.io/pypi/v/ctrl-z.svg
     :target: https://pypi.org/project/ctrl-z/
 
-.. _documentation: https://readthedocs.org#TODO
+.. |docs| image:: https://readthedocs.org/projects/ctrl-z/badge/?version=latest
+    :target: https://ctrl-z.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
+.. _documentation: https://ctrl-z.readthedocs.io/en/latest/
