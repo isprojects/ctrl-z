@@ -10,6 +10,7 @@ import django
 
 from .backup import Backup, configure_logging
 from .config import DEFAULT_CONFIG_FILE
+from .transfer import BackupTransfer
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +118,11 @@ class CLI:
             default=True, help="Do not restore files"
         )
 
+        # backup transfer
+        parser_transfer = subparsers.add_parser(
+            'transfer', help='Transfer the backups to an off-site location'
+        )
+
         self.parser = parser
 
     def __call__(self, args=None, config_file: str=DEFAULT_CONFIG_FILE, stdout=None, stderr=None):
@@ -166,6 +172,8 @@ class CLI:
             self.backup(options)
         elif subcommand == 'restore':
             self.restore(options)
+        elif subcommand == 'transfer':
+            self.transfer(options, config_file, conf_overrides)
         else:
             self.parser.print_help()
 
@@ -218,6 +226,13 @@ class CLI:
             raise
         finally:
             backup.report(has_errors)
+
+    def transfer(self, options, config_file, conf_overrides):
+        conf_overrides['use_parent_dir'] = True
+
+        transfer = BackupTransfer.from_config(config_file, **conf_overrides)
+        transfer.show_info()
+        transfer.sync_to_remote()
 
 
 cli = CLI()

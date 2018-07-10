@@ -1,6 +1,5 @@
 import logging
 import os
-import re
 import shutil
 from datetime import date, datetime
 from itertools import chain
@@ -9,15 +8,14 @@ from typing import Union
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import DAILY, WEEKLY, rrule
 
+from .constants import DATE_FORMAT
+from .utils import is_backup_dir
+
 logger = logging.getLogger(__name__)
 
 
 class RetentionPolicy:
     __slots__ = ['day_of_week', 'days_to_keep', 'weeks_to_keep']
-
-    DATE_FORMAT = "%Y-%m-%d"
-
-    BACKUP_DIR_PATTERN = re.compile(r'^2[0-9]{3}-[0-1][0-9]-[0-3][0-9]-(daily|weekly)')
 
     def __init__(self, **config):
         for key, value in config.items():
@@ -25,16 +23,6 @@ class RetentionPolicy:
 
     def serialize(self):
         return {key: getattr(self, key) for key in self.__slots__}
-
-    def is_backup_dir(self, dir_name: str) -> bool:
-        """
-        Test if a directory name fits the pattern of backup folder names.
-
-        The pattern is YYYY-MM-DD-suffix, where suffix is either 'daily' or 'weekly'.
-        """
-        if self.BACKUP_DIR_PATTERN.match(dir_name):
-            return True
-        return False
 
     def get_suffix(self, dt: Union[date, datetime]) -> str:
         return 'weekly' if dt.weekday() == self.day_of_week else 'daily'
@@ -44,7 +32,7 @@ class RetentionPolicy:
         Figure out the folder name for the current backup.
         """
         now = datetime.utcnow()
-        datestamp = now.strftime(self.DATE_FORMAT)
+        datestamp = now.strftime(DATE_FORMAT)
         suffix = self.get_suffix(now)
         return os.path.join(base, f"{datestamp}-{suffix}")
 
@@ -67,14 +55,14 @@ class RetentionPolicy:
         weeklies = rrule(WEEKLY, dtstart=weekly_start, count=self.weeks_to_keep)
 
         to_keep = sorted({
-            "{}-{}".format(dt.strftime(self.DATE_FORMAT), self.get_suffix(dt))
+            "{}-{}".format(dt.strftime(DATE_FORMAT), self.get_suffix(dt))
             for dt in chain(dailies, weeklies)
         })
         logger.debug("Keeping backups from: %r", to_keep)
 
         to_delete = []
         for dir_name in os.listdir(base):
-            if not self.is_backup_dir(dir_name):
+            if not is_backup_dir(dir_name):
                 logger.debug("%s doesn't look like a backup directory, keeping it.", dir_name)
                 continue
 
