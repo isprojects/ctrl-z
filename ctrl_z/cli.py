@@ -231,8 +231,15 @@ class CLI:
         conf_overrides['use_parent_dir'] = True
 
         transfer = BackupTransfer.from_config(config_file, **conf_overrides)
-        transfer.show_info()
-        transfer.sync_to_remote()
+        has_errors = False
+        try:
+            transfer.show_info()
+            transfer.sync_to_remote()
+        except Exception:
+            has_errors = True
+            raise
+        finally:
+            self._backup.report(has_errors)
 
 
 cli = CLI()
