@@ -42,15 +42,14 @@ class BackupTransfer:
 
     def __init__(self, config: Config):
         self.config = config
-        self.backend = import_string(config.transfer_backend)()
+
+        cls = import_string(config.transfer_backend)
+        self.backend = cls(**config.transfer_backend_init_kwargs)
 
     @classmethod
     def from_config(cls, config_file, **overrides):
         config = Config.from_file(config_file, **overrides)
         return cls(config=config)
-
-    def handle_command(self, options):
-        return self.backend.handle_command(self, options)
 
     def show_info(self):
         """

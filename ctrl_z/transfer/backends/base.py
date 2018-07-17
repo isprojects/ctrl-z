@@ -30,8 +30,8 @@ class Base:
     def upload(self, backup_archive):
         raise NotImplementedError  # noqa
 
-    @staticmethod
-    def add_arguments(parser):
+    @classmethod
+    def add_arguments(cls, parser):
         """
         Add optional command line arguments.
         """

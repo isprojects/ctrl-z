@@ -26,6 +26,7 @@ class Config:
         'pg_dump_binary',
         'pg_restore_binary',
         'transfer_backend',
+        'transfer_backend_init_kwargs',
         'transfer_path',
     ]
 

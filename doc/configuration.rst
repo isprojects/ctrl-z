@@ -5,8 +5,7 @@ Configuration
 =============
 
 Configuration is done in YAML format. You can pass the config file to use
-to the ``cli`` object (see :ref:`usage`), or pass it as a global CLI option
-``--config-file``.
+to the ``cli`` object (see :ref:`usage`).
 
 Global config options
 =====================

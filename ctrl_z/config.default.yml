@@ -35,5 +35,6 @@ pg_dump_binary: /usr/bin/pg_dump
 pg_restore_binary: /usr/bin/pg_restore
 
 # where are backups transferred (off-site)
-transfer_backend: ctrl_z.transfer.backends.google_drive.Backend
+transfer_backend: ctrl_z.transfer.backends.base.Base
+transfer_backend_init_kwargs: {}
 transfer_path: /

@@ -63,7 +63,6 @@ class CLI:
 
     def __init__(self):
         parser = argparse.ArgumentParser(description="CTRL-Z CLI")
-        parser.add_argument('--config-file', help="Config file to use")
         parser.add_argument('--base-dir', help="Base directory override")
 
         subparsers = parser.add_subparsers(
@@ -138,13 +137,11 @@ class CLI:
         self.stderr.write(f"CTRL-Z {__version__} - Backup and recovery tool\n")
 
         # load the command line args for transfers
-        # FIXME: handle the global --config-file option?
         config = Config.from_file(config_file)
-        transfer_backend = import_string(config.transfer_backend)()
-        transfer_backend.add_arguments(self.parser_transfer)
+        TransferBackend = import_string(config.transfer_backend)
+        TransferBackend.add_arguments(self.parser_transfer)
 
         args = self.parser.parse_args(args or sys.argv[1:])
-        config_file = args.config_file or config_file
 
         self._setup()
 
@@ -238,12 +235,10 @@ class CLI:
         """
         Relay the command to the transfer backend or initiate the actual transfer.
         """
-        conf_overrides['use_parent_dir'] = True
-
-        transfer = BackupTransfer.from_config(config_file, **conf_overrides)
+        transfer = BackupTransfer.from_config(config_file, use_parent_dir=True)
 
         # handle potential backend specific subcommands
-        handled = transfer.handle_command(options)
+        handled = transfer.backend.handle_command(transfer, options)
         if handled:
             return
 

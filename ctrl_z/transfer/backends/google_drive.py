@@ -30,9 +30,13 @@ def make_tarfile(output_filename: str, source_dir: str) -> None:
     assert os.path.exists(output_filename), "Archive creation (%s) failed" % output_filename
 
 
-class Backend(Base):
+def pprint_key_value(mapping, formatter=None):
+    for key, value in mapping.items():
+        value = formatter(value) if formatter else value
+        print(f"    {key}: {value}")
 
-    SERVICE_ACCOUNT_FILE = '/home/bbt/code/isprojects/ispnext/backend/backup/client_secrets.json'
+
+class Backend(Base):
 
     SCOPES = [
         'https://www.googleapis.com/auth/drive.file'
@@ -40,19 +44,23 @@ class Backend(Base):
 
     _folder_id = None
 
-    @classmethod
-    def add_arguments(cls, parser):
-        BackendCli.add_arguments(parser)
-        cls.parser = parser
+    def __init__(self, client_secrets: str):
+        """
+        A remote backup transfer backend using Google Drive.
 
-    def handle_command(self, transfer, options) -> bool:
-        return BackendCli.handle_command(transfer, options)
+        :param client_secrets: (absolute) path to the client_secrets.json file
+          containing the credentials to connect to the API. Note that a service
+          account is required for non-interactive behaviour (and the only way
+          implemented currently).
+        """
+        self.client_secrets = client_secrets
 
+    # Backend
     @property
     def service(self):
         if not hasattr(self, '_service'):
             credentials = service_account.Credentials.from_service_account_file(
-                self.SERVICE_ACCOUNT_FILE,
+                self.client_secrets,
                 scopes=self.SCOPES
             )
 
@@ -60,12 +68,12 @@ class Backend(Base):
         return self._service
 
     def show_quota(self):
+        """
+        Print the storage quota.
+        """
         quota = self.service.about().get(fields='storageQuota').execute()['storageQuota']
-        print("\nQuota:")
-        for key, value in quota.items():
-            size = sizeof_fmt(int(value))
-            print(f"    {key}: {size}")
-        print("\n")
+        print("Quota:")
+        pprint_key_value(quota, lambda x: sizeof_fmt(int(x)))
 
     def _get_or_create_dir(self, name, parent=None) -> str:
         # search if the folder exists
@@ -179,7 +187,18 @@ class Backend(Base):
         if response['md5Checksum'] != backup_archive.md5_checksum:
             raise UploadError("Uploaded archive checksum does not match")
 
-    # custom CLI action implementations
+    # CLI extension
+    @classmethod
+    def add_arguments(cls, parser):
+        BackendCli.add_arguments(parser)
+
+    def handle_command(self, transfer, options) -> bool:
+        return BackendCli.handle_command(transfer, options)
+
+    def test_connection(self):
+        user = self.service.about().get(fields='user').execute()['user']
+        print("User:")
+        pprint_key_value(user)
 
     def give_permissions(self, transfer: BackupTransfer, email: str):
         """
@@ -205,6 +224,10 @@ class BackendCli:
     def add_arguments(parser):
         drive_parser = parser.add_subparsers(help='Google Drive commands', dest='drive_command')
 
+        drive_parser.add_parser('test_connection', help="Test Google Drive connection/credentials")
+
+        drive_parser.add_parser('show_quota', help="Show the Drive quota")
+
         give_permissions = drive_parser.add_parser('give_permissions', help="Give read permissions to a user")
         give_permissions.add_argument('email', help="E-mail address of user to get read permission")
 
@@ -217,6 +240,8 @@ class BackendCli:
 
         if subcommand == 'give_permissions':
             transfer.backend.give_permissions(transfer, options.email)
-        else:
-            transfer.backend.parser.print_help()
+        elif subcommand == 'test_connection':
+            transfer.backend.test_connection()
+        elif subcommand == 'show_quota':
+            transfer.backend.show_quota()
         return True
