@@ -16,6 +16,9 @@ from .transfer import BackupTransfer
 logger = logging.getLogger(__name__)
 
 
+HEADER = "CTRL-Z {version} - Backup and recovery tool\n"
+
+
 def noop(*args, **kwargs):
     pass
 
@@ -63,7 +66,6 @@ class CLI:
 
     def __init__(self):
         parser = argparse.ArgumentParser(description="CTRL-Z CLI")
-        parser.add_argument('--base-dir', help="Base directory override")
 
         subparsers = parser.add_subparsers(
             help="Sub commands", dest='subcommand'
@@ -134,14 +136,14 @@ class CLI:
         if stderr:
             self.stderr = stderr
 
-        self.stderr.write(f"CTRL-Z {__version__} - Backup and recovery tool\n")
+        self.stderr.write(HEADER.format(version=__version__))
 
         # load the command line args for transfers
         config = Config.from_file(config_file)
         TransferBackend = import_string(config.transfer_backend)
         TransferBackend.add_arguments(self.parser_transfer)
 
-        args = self.parser.parse_args(args or sys.argv[1:])
+        args = self.parser.parse_args(args if args is not None else sys.argv[1:])
 
         self._setup()
 
@@ -155,8 +157,6 @@ class CLI:
     def run(self, options, config_file: str):
         subcommand = options.subcommand
         conf_overrides = {}
-        if options.base_dir:
-            conf_overrides['base_dir'] = options.base_dir
 
         if subcommand == 'restore':
             self._backup = Backup.prepare_restore(
@@ -179,7 +179,7 @@ class CLI:
         elif subcommand == 'transfer':
             self.transfer(options, config_file, conf_overrides)
         else:
-            self.parser.print_help()
+            self.parser.print_help(file=self.stdout)
 
     def generate_config(self, options):
         """

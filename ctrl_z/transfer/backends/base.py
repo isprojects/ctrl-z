@@ -1,4 +1,4 @@
-from .. import BackupArchive
+from .. import BackupArchive, BackupTransfer
 
 
 class Base:
@@ -37,7 +37,7 @@ class Base:
         """
         pass
 
-    def handle_command(self, options) -> bool:
+    def handle_command(self, transfer: BackupTransfer, options) -> bool:
         """
         Handle backend specific commands
 
