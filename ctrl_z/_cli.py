@@ -235,7 +235,7 @@ class CLI:
         """
         Relay the command to the transfer backend or initiate the actual transfer.
         """
-        transfer = BackupTransfer.from_config(config_file, use_parent_dir=True)
+        transfer = BackupTransfer.from_config(config_file)
 
         # handle potential backend specific subcommands
         handled = transfer.backend.handle_command(transfer, options)

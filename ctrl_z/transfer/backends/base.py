@@ -2,11 +2,14 @@ from .. import BackupArchive, BackupTransfer
 
 
 class Base:
+    """
+    Define the public API that a backend must implement.
+    """
 
     def show_quota(self):
-        raise NotImplementedError  # noqa
+        raise NotImplementedError("Transfer backends must implement a show_quota() method")
 
-    def ensure_dirs(self):
+    def ensure_dirs(self, path: str):
         """
         Ensure the folders in path exist on the remote.
         """
@@ -19,16 +22,16 @@ class Base:
         :param full_path: full path to the directory to archive
         :return: BackupArchive instance
         """
-        raise NotImplementedError  # noqa
+        raise NotImplementedError("Transfer backends must implement a prepare() method")
 
     def exists(self, backup_archive: BackupArchive) -> bool:
         """
         Check if the file exists on the remote
         """
-        raise NotImplementedError  # noqa
+        raise NotImplementedError("Transfer backends must implement a exists() method")
 
     def upload(self, backup_archive):
-        raise NotImplementedError  # noqa
+        raise NotImplementedError("Transfer backends must implement a upload() method")
 
     @classmethod
     def add_arguments(cls, parser):
