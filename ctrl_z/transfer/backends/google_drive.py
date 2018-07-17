@@ -11,7 +11,8 @@ import googleapiclient.discovery
 from google.oauth2 import service_account
 from googleapiclient.http import MediaFileUpload
 
-from .. import BackupArchive, UploadError
+from .. import BackupArchive, BackupTransfer, UploadError
+from .base import Base
 
 
 def sizeof_fmt(num, suffix='B'):
@@ -29,7 +30,7 @@ def make_tarfile(output_filename: str, source_dir: str) -> None:
     assert os.path.exists(output_filename), "Archive creation (%s) failed" % output_filename
 
 
-class Backend:
+class Backend(Base):
 
     SERVICE_ACCOUNT_FILE = '/home/bbt/code/isprojects/ispnext/backend/backup/client_secrets.json'
 
@@ -38,6 +39,14 @@ class Backend:
     ]
 
     _folder_id = None
+
+    @classmethod
+    def add_arguments(cls, parser):
+        BackendCli.add_arguments(parser)
+        cls.parser = parser
+
+    def handle_command(self, transfer, options) -> bool:
+        return BackendCli.handle_command(transfer, options)
 
     @property
     def service(self):
@@ -169,3 +178,45 @@ class Backend:
 
         if response['md5Checksum'] != backup_archive.md5_checksum:
             raise UploadError("Uploaded archive checksum does not match")
+
+    # custom CLI action implementations
+
+    def give_permissions(self, transfer: BackupTransfer, email: str):
+        """
+        Assign read permissions to the e-mail address.
+        """
+        bits = [bit for bit in transfer.config.transfer_path.split('/') if bit]
+        folder_id = self._get_or_create_dir(bits[0], parent=None)
+
+        self.service.permissions().create(
+            fileId=folder_id,
+            body={
+                'type': 'user',
+                'role': 'reader',
+                'emailAddress': email,
+            }
+        ).execute()
+        print("Folder {} can now be read".format(bits[0]))
+
+
+class BackendCli:
+
+    @staticmethod
+    def add_arguments(parser):
+        drive_parser = parser.add_subparsers(help='Google Drive commands', dest='drive_command')
+
+        give_permissions = drive_parser.add_parser('give_permissions', help="Give read permissions to a user")
+        give_permissions.add_argument('email', help="E-mail address of user to get read permission")
+
+    @staticmethod
+    def handle_command(transfer, options) -> bool:
+        subcommand = options.drive_command
+
+        if not subcommand:
+            return False
+
+        if subcommand == 'give_permissions':
+            transfer.backend.give_permissions(transfer, options.email)
+        else:
+            transfer.backend.parser.print_help()
+        return True

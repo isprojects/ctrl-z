@@ -49,6 +49,9 @@ class BackupTransfer:
         config = Config.from_file(config_file, **overrides)
         return cls(config=config)
 
+    def handle_command(self, options):
+        return self.backend.handle_command(self, options)
+
     def show_info(self):
         """
         Inventarize the operations to be done.
@@ -71,6 +74,9 @@ class BackupTransfer:
                 continue
             backup_dirs.append(dirname)
 
+        # make sure the (relative) directory structure exists on the remote
+        # this depends on the backend - for rsync for example this may not be
+        # needed as it creates them on the fly
         self.backend.ensure_dirs(self.config.transfer_path)
 
         logger.info("Syncing backups %s to remote...", backup_dirs)

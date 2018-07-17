@@ -7,9 +7,10 @@ import os
 import sys
 
 import django
+from django.utils.module_loading import import_string
 
 from .backup import Backup, configure_logging
-from .config import DEFAULT_CONFIG_FILE
+from .config import DEFAULT_CONFIG_FILE, Config
 from .transfer import BackupTransfer
 
 logger = logging.getLogger(__name__)
@@ -119,7 +120,7 @@ class CLI:
         )
 
         # backup transfer
-        parser_transfer = subparsers.add_parser(
+        self.parser_transfer = subparsers.add_parser(
             'transfer', help='Transfer the backups to an off-site location'
         )
 
@@ -135,6 +136,12 @@ class CLI:
             self.stderr = stderr
 
         self.stderr.write(f"CTRL-Z {__version__} - Backup and recovery tool\n")
+
+        # load the command line args for transfers
+        # FIXME: handle the global --config-file option?
+        config = Config.from_file(config_file)
+        transfer_backend = import_string(config.transfer_backend)()
+        transfer_backend.add_arguments(self.parser_transfer)
 
         args = self.parser.parse_args(args or sys.argv[1:])
         config_file = args.config_file or config_file
@@ -228,9 +235,18 @@ class CLI:
             backup.report(has_errors)
 
     def transfer(self, options, config_file, conf_overrides):
+        """
+        Relay the command to the transfer backend or initiate the actual transfer.
+        """
         conf_overrides['use_parent_dir'] = True
 
         transfer = BackupTransfer.from_config(config_file, **conf_overrides)
+
+        # handle potential backend specific subcommands
+        handled = transfer.handle_command(options)
+        if handled:
+            return
+
         has_errors = False
         try:
             transfer.show_info()
