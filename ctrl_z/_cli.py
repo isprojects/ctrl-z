@@ -7,11 +7,16 @@ import os
 import sys
 
 import django
+from django.utils.module_loading import import_string
 
 from .backup import Backup, configure_logging
-from .config import DEFAULT_CONFIG_FILE
+from .config import DEFAULT_CONFIG_FILE, Config
+from .transfer import BackupTransfer
 
 logger = logging.getLogger(__name__)
+
+
+HEADER = "CTRL-Z {version} - Backup and recovery tool\n"
 
 
 def noop(*args, **kwargs):
@@ -61,8 +66,6 @@ class CLI:
 
     def __init__(self):
         parser = argparse.ArgumentParser(description="CTRL-Z CLI")
-        parser.add_argument('--config-file', help="Config file to use")
-        parser.add_argument('--base-dir', help="Base directory override")
 
         subparsers = parser.add_subparsers(
             help="Sub commands", dest='subcommand'
@@ -117,6 +120,11 @@ class CLI:
             default=True, help="Do not restore files"
         )
 
+        # backup transfer
+        self.parser_transfer = subparsers.add_parser(
+            'transfer', help='Transfer the backups to an off-site location'
+        )
+
         self.parser = parser
 
     def __call__(self, args=None, config_file: str=DEFAULT_CONFIG_FILE, stdout=None, stderr=None):
@@ -128,10 +136,14 @@ class CLI:
         if stderr:
             self.stderr = stderr
 
-        self.stderr.write(f"CTRL-Z {__version__} - Backup and recovery tool\n")
+        self.stderr.write(HEADER.format(version=__version__))
 
-        args = self.parser.parse_args(args or sys.argv[1:])
-        config_file = args.config_file or config_file
+        # load the command line args for transfers
+        config = Config.from_file(config_file)
+        TransferBackend = import_string(config.transfer_backend)
+        TransferBackend.add_arguments(self.parser_transfer)
+
+        args = self.parser.parse_args(args if args is not None else sys.argv[1:])
 
         self._setup()
 
@@ -145,8 +157,6 @@ class CLI:
     def run(self, options, config_file: str):
         subcommand = options.subcommand
         conf_overrides = {}
-        if options.base_dir:
-            conf_overrides['base_dir'] = options.base_dir
 
         if subcommand == 'restore':
             self._backup = Backup.prepare_restore(
@@ -166,8 +176,10 @@ class CLI:
             self.backup(options)
         elif subcommand == 'restore':
             self.restore(options)
+        elif subcommand == 'transfer':
+            self.transfer(options, config_file, conf_overrides)
         else:
-            self.parser.print_help()
+            self.parser.print_help(file=self.stdout)
 
     def generate_config(self, options):
         """
@@ -218,6 +230,27 @@ class CLI:
             raise
         finally:
             backup.report(has_errors)
+
+    def transfer(self, options, config_file, conf_overrides):
+        """
+        Relay the command to the transfer backend or initiate the actual transfer.
+        """
+        transfer = BackupTransfer.from_config(config_file)
+
+        # handle potential backend specific subcommands
+        handled = transfer.backend.handle_command(self, transfer, options)
+        if handled:
+            return
+
+        has_errors = False
+        try:
+            transfer.show_info()
+            transfer.sync_to_remote()
+        except Exception:
+            has_errors = True
+            raise
+        finally:
+            self._backup.report(has_errors)
 
 
 cli = CLI()

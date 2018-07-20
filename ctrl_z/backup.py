@@ -33,7 +33,7 @@ class Backup:
 
     @classmethod
     def prepare_restore(cls, config_file, base_dir: str):
-        config = Config.from_file(config_file, base_dir=base_dir, restore=True)
+        config = Config.from_file(config_file, base_dir=base_dir, use_parent_dir=True)
         return cls(config=config)
 
     def restore(self, db=True, skip_db=None, files=True):
