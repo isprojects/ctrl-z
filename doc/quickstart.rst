@@ -19,6 +19,13 @@ Install
 
     pip install ctrl-z
 
+If you're using a built in backend to transfer the backups to a remote/offsite
+location (currently only Google Drive is supported), you can install the
+extra dependencies as well:
+
+.. code-block:: bash
+
+    pip install ctrl-z[transfer_backend.drive]
 
 .. _usage:
 
@@ -54,6 +61,8 @@ CTRL-Z exposes a CLI object to hook into your project, for example:
 
 
 Once the setup around the CLI is done, you can use it.
+
+.. _cli-help:
 
 CLI help
 --------
@@ -136,3 +145,16 @@ Restore the backup at the specified path.
   for. Useful if you have a multi-db setup and only the ``default`` is important,
   for example. Use multiple times for each alias to skip.
 * ``--no-files``: do not restore the (uploaded) files (e.g. ``settings.MEDIA_ROOT``)
+
+
+Transfer a backup
+-----------------
+
+.. code-block:: bash
+
+    python backup/cli.py backup transfer
+
+Depending on the backend used, more CLI options may be available. These show
+up via the built-in :ref:`cli-help`.
+
+The transfer is done according to the configured backend.

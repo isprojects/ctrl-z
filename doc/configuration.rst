@@ -129,3 +129,26 @@ Which binary to use to dump the database. Defaults to ``/usr/bin/pg_dump``.
 ---------------------
 
 Which binary to use to dump the database. Defaults to ``/usr/bin/pg_restore``.
+
+``transfer_backend``
+--------------------
+
+The backend class to use to transfer backups from the local file system to a
+remote/off-site location. Specify a dotted Python path to import.
+
+Available options:
+
+* ``ctrl_z.transfer.backends.google_drive.Backend`` - see :ref:`transfer-backend-drive`
+
+``transfer_backend_init_kwargs``
+--------------------------------
+
+A mapping, specifying any keyword arguments needed to initialize the backend.
+See :ref:`transfer-backends` for detailed information.
+
+``transfer_path``
+-----------------
+
+A string representing the base path to transfer backends to on the remote
+system. Always use forward slashes. Defaults to ``/``. The backend is
+responsible for creating the directory tree if it doesn't exist yet.

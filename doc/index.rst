@@ -22,6 +22,7 @@ while being flexible through a yaml configuration file.
 
    quickstart
    configuration
+   transfer_backends
 
 
 Indices and tables
