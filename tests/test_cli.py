@@ -119,7 +119,7 @@ class TestRestore:
 
 class TestTransfer:
 
-    def test_transfer_main_command(self, mocker):
+    def test_transfer_main_command(self, tmpdir, config_writer, mocker):
         """
         Assert that the transfer is initiated if no backend-specific subcommand was handled.
         """
@@ -127,10 +127,14 @@ class TestTransfer:
         transfer = mocked_BackupTransfer.from_config.return_value
         transfer.backend.handle_command.return_value = False
 
-        cli(['transfer'])
+        config_path = str(tmpdir.join('config.yml'))
+        backups_base = tmpdir.join('backups')
+        config_writer(config_path, base_dir=str(backups_base))
+
+        cli(['transfer'], config_file=config_path)
         transfer.sync_to_remote.assert_called_once()
 
-    def test_transfer_subcommand_handled(self, mocker):
+    def test_transfer_subcommand_handled(self, tmpdir, config_writer, mocker):
         """
         Assert that the transfer is not initiated if a backend-specific subcommand was handled.
         """
@@ -138,12 +142,20 @@ class TestTransfer:
         transfer = mocked_BackupTransfer.from_config.return_value
         transfer.backend.handle_command.return_value = True
 
-        cli(['transfer'])
+        config_path = str(tmpdir.join('config.yml'))
+        backups_base = tmpdir.join('backups')
+        config_writer(config_path, base_dir=str(backups_base))
+
+        cli(['transfer'], config_file=config_path)
         transfer.sync_to_remote.assert_not_called()
 
 
-def test_no_subcommand():
-    cli([], stdout=StringIO())
+def test_no_subcommand(tmpdir, config_writer):
+    config_path = str(tmpdir.join('config.yml'))
+    backups_base = tmpdir.join('backups')
+    config_writer(config_path, base_dir=str(backups_base))
+
+    cli([], stdout=StringIO(), config_file=config_path)
 
     cli.stdout.seek(0)
     output = cli.stdout.read()
