@@ -1,4 +1,7 @@
+import argparse
+
 from .. import BackupArchive, BackupTransfer
+from ..._cli import CLI
 
 
 class Base:
@@ -40,10 +43,14 @@ class Base:
         """
         pass
 
-    def handle_command(self, transfer: BackupTransfer, options) -> bool:
+    def handle_command(self, cli: CLI, transfer: BackupTransfer, options: argparse.Namespace) -> bool:
         """
         Handle backend specific commands
 
+        :param cli: the CLI instance asking to handle the command
+        :param transfer: the :class:`ctrl_z.transfer.BackupTransfer` instance
+          holding the config.
+        :param options: the CLI arguments parsed into argparse.Namespace
         :return: boolean indicating if a command was handled or not, if not,
         the default behaviour is to transfer the backup.
         """

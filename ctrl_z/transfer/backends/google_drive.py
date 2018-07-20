@@ -4,7 +4,9 @@ Remote/offsite backup storage backend using Google Drive.
 Auth is done through service accounts, see
 https://developers.google.com/identity/protocols/OAuth2ServiceAccount
 """
+import argparse
 import os
+import sys
 import tarfile
 
 import googleapiclient.discovery
@@ -12,6 +14,7 @@ from google.oauth2 import service_account
 from googleapiclient.http import MediaFileUpload
 
 from .. import BackupArchive, BackupTransfer, UploadError
+from ..._cli import CLI
 from .base import Base
 
 
@@ -26,14 +29,16 @@ def sizeof_fmt(num, suffix='B'):
 
 def make_tarfile(output_filename: str, source_dir: str) -> None:
     with tarfile.open(output_filename, "w:gz") as tar:
-        tar.add(source_dir, arcname=os.path.basename(source_dir))
+        for name in os.listdir(source_dir):
+            full_path = os.path.join(source_dir, name)
+            tar.add(full_path, arcname=os.path.basename(full_path))
     assert os.path.exists(output_filename), "Archive creation (%s) failed" % output_filename
 
 
-def pprint_key_value(mapping, formatter=None):
+def pprint_key_value(mapping, formatter=None, stdout=None):
     for key, value in mapping.items():
         value = formatter(value) if formatter else value
-        print(f"    {key}: {value}")
+        print(f"    {key}: {value}", file=stdout)
 
 
 class Backend(Base):
@@ -43,6 +48,9 @@ class Backend(Base):
     ]
 
     _folder_id = None
+    _http = None
+
+    stdout = sys.stdout
 
     def __init__(self, client_secrets: str):
         """
@@ -67,13 +75,17 @@ class Backend(Base):
             self._service = googleapiclient.discovery.build('drive', 'v3', credentials=credentials)
         return self._service
 
+    @property
+    def http(self):
+        return self._http
+
     def show_quota(self):
         """
         Print the storage quota.
         """
-        quota = self.service.about().get(fields='storageQuota').execute()['storageQuota']
-        print("Quota:")
-        pprint_key_value(quota, lambda x: sizeof_fmt(int(x)))
+        quota = self.service.about().get(fields='storageQuota').execute(http=self.http)['storageQuota']
+        print("Quota:", file=self.stdout)
+        pprint_key_value(quota, lambda x: sizeof_fmt(int(x)), stdout=self.stdout)
 
     def _get_or_create_dir(self, name, parent=None) -> str:
         # search if the folder exists
@@ -86,7 +98,7 @@ class Backend(Base):
         folders = (
             self.service.files()
             .list(q=search_q, fields='files(id, parents)')
-            .execute()
+            .execute(http=self.http)
             .get('files', [])
         )
         if folders:
@@ -100,7 +112,7 @@ class Backend(Base):
                 'mimeType': 'application/vnd.google-apps.folder',
                 'parents': [parent] if parent else [],
             }, fields='id')
-            .execute()
+            .execute(http=self.http)
         )
         return _folder['id']
 
@@ -152,7 +164,7 @@ class Backend(Base):
             self.service
             .files()
             .list(q=search_q, fields='files(md5Checksum)')
-            .execute()
+            .execute(http=self.http)
             .get('files', [])
         )
         if files:
@@ -181,7 +193,7 @@ class Backend(Base):
                 media_body=media,
                 fields='md5Checksum'
             )
-            .execute()
+            .execute(http=self.http)
         )
 
         if response['md5Checksum'] != backup_archive.md5_checksum:
@@ -192,13 +204,14 @@ class Backend(Base):
     def add_arguments(cls, parser):
         BackendCli.add_arguments(parser)
 
-    def handle_command(self, transfer, options) -> bool:
+    def handle_command(self, cli: CLI, transfer: BackupTransfer, options: argparse.Namespace) -> bool:
+        self.stdout = cli.stdout
         return BackendCli.handle_command(transfer, options)
 
     def test_connection(self):
-        user = self.service.about().get(fields='user').execute()['user']
-        print("User:")
-        pprint_key_value(user)
+        user = self.service.about().get(fields='user').execute(http=self.http)['user']
+        print("User:", file=self.stdout)
+        pprint_key_value(user, stdout=self.stdout)
 
     def give_permissions(self, transfer: BackupTransfer, email: str):
         """
@@ -214,8 +227,8 @@ class Backend(Base):
                 'role': 'reader',
                 'emailAddress': email,
             }
-        ).execute()
-        print("Folder {} can now be read".format(bits[0]))
+        ).execute(http=self.http)
+        print("Folder {} can now be read".format(bits[0]), file=self.stdout)
 
 
 class BackendCli:
@@ -232,7 +245,7 @@ class BackendCli:
         give_permissions.add_argument('email', help="E-mail address of user to get read permission")
 
     @staticmethod
-    def handle_command(transfer, options) -> bool:
+    def handle_command(transfer: BackupTransfer, options: argparse.Namespace) -> bool:
         subcommand = options.drive_command
 
         if not subcommand:

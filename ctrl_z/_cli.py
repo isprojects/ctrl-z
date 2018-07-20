@@ -238,7 +238,7 @@ class CLI:
         transfer = BackupTransfer.from_config(config_file)
 
         # handle potential backend specific subcommands
-        handled = transfer.backend.handle_command(transfer, options)
+        handled = transfer.backend.handle_command(self, transfer, options)
         if handled:
             return
 
