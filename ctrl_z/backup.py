@@ -96,7 +96,8 @@ class Backup:
             log_content = logfile.read()
 
         now = datetime.utcnow()
-        subject = f"Backup {now} failed" if has_errors else f"Backup {now} succeeded"
+        subject_template = "Backup {now} failed" if has_errors else "Backup {now} succeeded"
+        subject = subject_template.format(now=now)
         send_mail(subject, log_content, settings.DEFAULT_FROM_EMAIL, recipients)
 
     def databases(self, skip_db=None):
@@ -156,7 +157,7 @@ class Backup:
 
     def _get_db_filename(self, db_config: dict) -> str:
         host, port, name = self._get_conn_params(db_config)
-        return f"{host}.{port}.{name}.custom"
+        return "{host}.{port}.{name}.custom".format(host=host, port=port, name=name)
 
     def _backup_database(self, db_config: dict):
         program = self.config.pg_dump_binary
@@ -168,7 +169,7 @@ class Backup:
             program,
             name,
             '-Fc',  # custom format, guaranteed that it can be loaded in newer Postgres versions
-            f'-f{outfile}',
+            '-f{outfile}'.format(outfile=outfile),
             '-C',  # include commands to create database
         ]
 
@@ -203,7 +204,7 @@ class Backup:
 
         args = [
             program,
-            f"-dpostgres",
+            "-dpostgres",
             '-c',  # clean -- drop objects before recreating
             '-C',  # create the database
             backup_file
