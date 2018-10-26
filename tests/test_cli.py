@@ -55,13 +55,13 @@ def test_full_backup(tmpdir, settings, config_writer):
     expected_date = datetime.utcnow().strftime("%Y-%m-%d")
 
     # assert that the backup directory was created
-    children = os.listdir(backups_base)
+    children = os.listdir(str(backups_base))
     assert len(children) == 1
     backup_dir = children[0]
     assert backup_dir.startswith(expected_date)
 
     full_path = backups_base.join(backup_dir)
-    subdirs = os.listdir(full_path)
+    subdirs = os.listdir(str(full_path))
     assert sorted(subdirs) == ['backup.log', 'db', 'files']
 
 
@@ -83,7 +83,7 @@ def test_full_restore(tmpdir, settings, config_writer):
     cli(args=['restore', str(backup_dir)], config_file=config_path, stdout=StringIO())
 
     # verify that the log file was created
-    assert 'backup.log' in os.listdir(backup_dir)
+    assert 'backup.log' in os.listdir(str(backup_dir))
 
 
 def test_full_restore_bad_directory():

@@ -128,7 +128,8 @@ class CLI:
         if stderr:
             self.stderr = stderr
 
-        self.stderr.write(f"CTRL-Z {__version__} - Backup and recovery tool\n")
+        version_string = "CTRL-Z {version} - Backup and recovery tool\n".format(version=__version__)
+        self.stderr.write(version_string)
 
         args = self.parser.parse_args(args or sys.argv[1:])
         config_file = args.config_file or config_file

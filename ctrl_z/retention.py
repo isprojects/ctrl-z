@@ -46,7 +46,7 @@ class RetentionPolicy:
         now = datetime.utcnow()
         datestamp = now.strftime(self.DATE_FORMAT)
         suffix = self.get_suffix(now)
-        return os.path.join(base, f"{datestamp}-{suffix}")
+        return os.path.join(base, "{datestamp}-{suffix}".format(datestamp=datestamp, suffix=suffix))
 
     def rotate(self, base: str):
         """
