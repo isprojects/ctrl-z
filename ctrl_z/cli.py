@@ -117,6 +117,9 @@ class CLI:
             default=True, help="Do not restore files"
         )
 
+        # retention policy inspection
+        subparsers.add_parser('show_backup_dir', help='Echo the backup directory')
+
         self.parser = parser
 
     def __call__(self, args=None, config_file: str=DEFAULT_CONFIG_FILE, stdout=None, stderr=None):
@@ -167,6 +170,8 @@ class CLI:
             self.backup(options)
         elif subcommand == 'restore':
             self.restore(options)
+        elif subcommand == 'show_backup_dir':
+            self.show_backup_dir()
         else:
             self.parser.print_help()
 
@@ -219,6 +224,10 @@ class CLI:
             raise
         finally:
             backup.report(has_errors)
+
+    def show_backup_dir(self):
+        self.stdout.write(self._backup.base_dir)
+        self.stdout.write("\n")
 
 
 cli = CLI()
