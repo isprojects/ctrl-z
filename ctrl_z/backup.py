@@ -167,7 +167,6 @@ class Backup:
 
         args = [
             program,
-            name,
             '-Fc',  # custom format, guaranteed that it can be loaded in newer Postgres versions
             '-f{outfile}'.format(outfile=outfile),
             '-C',  # include commands to create database
