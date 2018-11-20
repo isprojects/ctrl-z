@@ -174,13 +174,14 @@ class Backup:
 
         logger.info("Dumping database %s (%s:%s)", name, host, port)
 
-        env = {
+        env = os.environ.copy()
+        env.update({
             'PGHOST': host,
             'PGPORT': str(port),
             'PGPASSWORD': db_config['PASSWORD'],
             'PGUSER': db_config['USER'],
             'PGDATABASE': name,
-        }
+        })
 
         process = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
@@ -211,13 +212,14 @@ class Backup:
 
         logger.info("Restoring database %s (%s:%s)", name, host, port)
 
-        env = {
+        env = os.environ.copy()
+        env.update({
             'PGHOST': host,
             'PGPORT': str(port),
             'PGPASSWORD': db_config['PASSWORD'],
             'PGUSER': db_config['USER'],
             'PGDATABASE': name,
-        }
+        })
 
         process = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
