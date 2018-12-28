@@ -273,7 +273,18 @@ class Backup:
 
         if os.path.exists(dest):
             logger.debug("Target destination exists, removing...")
-            shutil.rmtree(dest)
+
+            # in a docker context, with directories mounted, the root node
+            # cannot be deleted, so we delete all child nodes instead
+            try:
+                shutil.rmtree(dest)
+            except OSError:
+                for item in os.listdir(dest):
+                    full_path = os.path.join(dest, item)
+                    if os.path.isdir(full_path):
+                        shutil.rmtree(full_path)
+                    else:
+                        os.remove(full_path)
 
         shutil.copytree(src, dest)
 
