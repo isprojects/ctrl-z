@@ -286,7 +286,18 @@ class Backup:
                     else:
                         os.remove(full_path)
 
-        shutil.copytree(src, dest)
+        # similarly to above, tree copy may fail if we couldn't clean up properly
+        # since the dest may not exist
+        if not os.path.exists(dest):
+            os.mkdir(dest)
+
+        for item in os.listdir(src):
+            full_sr_path = os.path.join(src, item)
+            full_dest_path = os.path.join(dest, item)
+            if os.path.isdir(full_sr_path):
+                shutil.copytree(full_sr_path, full_dest_path)
+            else:
+                shutil.copy(full_sr_path, full_dest_path)
 
         logger.info("Restored %s to %s", src, dest)
 
