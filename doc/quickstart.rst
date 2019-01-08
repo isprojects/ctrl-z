@@ -125,7 +125,7 @@ Restore a backup
 
 .. code-block:: bash
 
-    python backup/cli.py backup /var/backups/2018-06-27-daily/
+    python backup/cli.py restore /var/backups/2018-06-27-daily/
 
 Restore the backup at the specified path.
 
