@@ -14,16 +14,11 @@ services:
 
 addons:
   postgresql: "10"
-  apt:
-    packages:
-    - postgresql-10
-    - postgresql-client-10
 
 env:
   global:
-    - PGPORT=5433
-    - PGUSER=travis
-    - PGPASSWORD=travis
+    - PGUSER=postgres
+    - PGPASSWORD=
   matrix:
     - DJANGO=1.11
     - DJANGO=2.0
@@ -43,9 +38,8 @@ install:
   - pip install tox-travis
 
 before_script:
-  - psql -c 'create database ctrlz;' -U travis
-  - psql -c 'create database ctrlz2;' -U travis
-  - psql -c "ALTER USER travis WITH PASSWORD 'travis';"
+  - psql -c 'create database ctrlz;' -U postgres
+  - psql -c 'create database ctrlz2;' -U postgres
 
 script:
   - tox
