@@ -113,7 +113,7 @@ class Backup:
             self._backup_database(db_config)
 
     def restore_databases(self, skip_db=None):
-        logger.info("Restoring%d databases", len(settings.DATABASES))
+        logger.info("Restoring %d databases", len(settings.DATABASES))
         for alias, db_config in settings.DATABASES.items():
             if skip_db and alias in skip_db:
                 continue
