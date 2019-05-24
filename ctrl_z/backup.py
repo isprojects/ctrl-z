@@ -202,6 +202,13 @@ class Backup:
         filename = self._get_db_filename(db_config)
         backup_file = os.path.join(self.db_dir, filename)
 
+        if not os.path.isfile(backup_file):
+            raise BackupError(
+                "Dump file '{backup_file}' does not exist. Possibly you need "
+                "to provide the alias mapping if you're restoring to a "
+                "different database name.".format(backup_file=backup_file)
+            )
+
         args = [
             program,
             "-dpostgres",
