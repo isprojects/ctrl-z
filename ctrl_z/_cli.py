@@ -7,6 +7,7 @@ import os
 import sys
 
 import django
+from django.conf import settings
 
 from .backup import Backup, configure_logging
 from .config import DEFAULT_CONFIG_FILE
@@ -31,6 +32,31 @@ class readable_dir(argparse.Action):
             raise argparse.ArgumentTypeError(
                 "{0} is not a readable dir".format(prospective_dir)
             )
+
+
+class db_alias(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        _values = getattr(namespace, self.dest) or []
+
+        # check correct format
+        for value in values:
+            if ':' not in value:
+                raise argparse.ArgumentTypeError(
+                    "{0} has an invalid format - it should be 'alias:name'".format(value)
+                )
+
+        # check that aliases exist
+        for value in values:
+            alias, db_name = value.split(':', 1)
+            if alias not in settings.DATABASES:
+                raise argparse.ArgumentTypeError(
+                    "Alias '{alias}' is not configured in the django settings".format(
+                        alias=alias
+                    )
+                )
+            _values.append((alias, db_name))
+
+        setattr(namespace, self.dest, _values)
 
 
 class CLI:
@@ -103,6 +129,15 @@ class CLI:
             help="Directory containing the backups"
         )
         parser_restore.add_argument(
+            '--db-name', dest='db_names',
+            metavar='ALIAS:DB_NAME', nargs="+", action=db_alias,
+            help="Mapping of database alias to database name. Useful if you're "
+                 "restoring from one environment to another one. Format is "
+                 "alias:name, where the alias is the alias used in the "
+                 "settings of the target, and the name is the database name "
+                 "of the source database."
+        )
+        parser_restore.add_argument(
             '--no-db', '--no-database', dest='restore_db',
             action='store_false', default=True,
             help="Do not restore the databases"
@@ -134,10 +169,10 @@ class CLI:
         version_string = "CTRL-Z {version} - Backup and recovery tool\n".format(version=__version__)
         self.stderr.write(version_string)
 
+        self._setup()
+
         args = self.parser.parse_args(args or sys.argv[1:])
         config_file = args.config_file or config_file
-
-        self._setup()
 
         self.run(args, config_file)
 
@@ -211,13 +246,17 @@ class CLI:
         restore_db = options.restore_db
         skip_db = options.skip_db
         restore_files = options.restore_files
+        db_names = dict(options.db_names or ())
 
         backup = self._backup
 
         # perform the restore
         has_errors = False
         try:
-            backup.restore(db=restore_db, skip_db=skip_db, files=restore_files)
+            backup.restore(
+                db=restore_db, skip_db=skip_db,
+                files=restore_files, db_names=db_names
+            )
         except Exception:
             has_errors = True
             logger.exception("Restore failed")

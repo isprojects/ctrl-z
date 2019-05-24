@@ -1,36 +1,33 @@
+dist: xenial
 language: python
 cache: pip
 
 sudo: false
 
 python:
+  - "3.5"
   - "3.6"
+  - "3.7"
 
 services:
   - postgresql
 
 addons:
   postgresql: "10"
-  apt:
-    packages:
-    - postgresql-10
-    - postgresql-client-10
 
 env:
   global:
-    - PGPORT=5433
-    - PGUSER=travis
-    - PGPASSWORD=travis
+    - PGUSER=postgres
+    - PGPASSWORD=
+  matrix:
+    - DJANGO=1.11
+    - DJANGO=2.0
+    - DJANGO=2.1
+    - DJANGO=2.2
 
 matrix:
   fast_finish: true
   include:
-    - python: "3.5"
-      env: DJANGO=1.11
-
-    - python: "3.6"
-      env: DJANGO=2.0
-
     - python: "3.6"
       env: TOXENV=isort
 
@@ -38,12 +35,11 @@ matrix:
       env: TOXENV=docs
 
 install:
-  - pip install tox tox-travis
+  - pip install tox-travis
 
 before_script:
-  - psql -c 'create database ctrlz;' -U travis
-  - psql -c 'create database ctrlz2;' -U travis
-  - psql -c "ALTER USER travis WITH PASSWORD 'travis';"
+  - psql -c 'create database ctrlz;' -U postgres
+  - psql -c 'create database ctrlz2;' -U postgres
 
 script:
   - tox

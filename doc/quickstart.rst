@@ -125,7 +125,7 @@ Restore a backup
 
 .. code-block:: bash
 
-    python backup/cli.py backup /var/backups/2018-06-27-daily/
+    python backup/cli.py restore /var/backups/2018-06-27-daily/
 
 Restore the backup at the specified path.
 
@@ -136,3 +136,8 @@ Restore the backup at the specified path.
   for. Useful if you have a multi-db setup and only the ``default`` is important,
   for example. Use multiple times for each alias to skip.
 * ``--no-files``: do not restore the (uploaded) files (e.g. ``settings.MEDIA_ROOT``)
+* ``--db-name``: convenient for loading a different source database name into
+  the target environment. Syntax: ``alias:name``, for example
+  ``default:project_staging``. Dump files are saved with the database name in
+  the file name, so this allows you to refer to that. Can be used multiple
+  times for multi-db setups.
