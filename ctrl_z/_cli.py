@@ -36,7 +36,7 @@ class readable_dir(argparse.Action):
 
 class db_alias(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        _values = []
+        _values = getattr(namespace, self.dest) or []
 
         # check correct format
         for value in values:
