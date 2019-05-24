@@ -3,6 +3,7 @@ import os
 import shutil
 import subprocess
 from datetime import datetime
+from typing import Optional
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -36,13 +37,13 @@ class Backup:
         config = Config.from_file(config_file, base_dir=base_dir, restore=True)
         return cls(config=config)
 
-    def restore(self, db=True, skip_db=None, files=True):
+    def restore(self, db=True, skip_db=None, files=True, db_names: Optional[dict] = None):
         logger.info("Starting restore of %s", self.base_dir)
 
         if files:
             self.restore_files()
         if db:
-            self.restore_databases(skip_db=skip_db)
+            self.restore_databases(skip_db=skip_db, db_names=db_names)
 
         logger.info("Finished restore of %s", self.base_dir)
 
@@ -112,12 +113,13 @@ class Backup:
                 continue
             self._backup_database(db_config)
 
-    def restore_databases(self, skip_db=None):
-        logger.info("Restoring%d databases", len(settings.DATABASES))
+    def restore_databases(self, skip_db=None, db_names: Optional[dict] = None):
+        logger.info("Restoring %d databases", len(settings.DATABASES))
         for alias, db_config in settings.DATABASES.items():
             if skip_db and alias in skip_db:
                 continue
-            self._restore_database(alias, db_config)
+            source_db_name = db_names.get(alias) if db_names else None
+            self._restore_database(alias, db_config, source_db_name=source_db_name)
 
     def files(self):
         """
@@ -195,12 +197,23 @@ class Backup:
 
         logger.info("Database backup saved to %s", outfile)
 
-    def _restore_database(self, alias: str, db_config: dict):
+    def _restore_database(self, alias: str, db_config: dict, source_db_name: Optional[str] = None):
         program = self.config.pg_restore_binary
 
+        source_db_config = db_config.copy()
+        if source_db_name:
+            source_db_config['NAME'] = source_db_name
+
         host, port, name = self._get_conn_params(db_config)
-        filename = self._get_db_filename(db_config)
+        filename = self._get_db_filename(source_db_config)
         backup_file = os.path.join(self.db_dir, filename)
+
+        if not os.path.isfile(backup_file):
+            raise BackupError(
+                "Dump file '{backup_file}' does not exist. Possibly you need "
+                "to provide the alias mapping if you're restoring to a "
+                "different database name.".format(backup_file=backup_file)
+            )
 
         args = [
             program,

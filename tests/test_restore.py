@@ -32,6 +32,30 @@ def test_restore_db(tmpdir, config_writer, django_db_blocker):
         assert count > 0
 
 
+def test_restore_different_db_name(tmpdir, config_writer, django_db_blocker):
+    config_writer(base_dir=BACKUPS_DIR)
+    backup = Backup.prepare_restore(
+        str(tmpdir.join('config.yml')),
+        os.path.join(BACKUPS_DIR, '2018-06-27-daily')
+    )
+
+    with django_db_blocker.unblock():
+        with connection.cursor() as cursor:
+            cursor.execute('DROP TABLE IF EXISTS django_migrations;')
+
+        backup.restore(
+            files=False, skip_db='secondary',
+            db_names={'default': 'dummy'}
+        )
+
+        # check that the table is there
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) FROM django_migrations;")
+            (count,) = cursor.fetchone()
+
+        assert count > 0
+
+
 def test_skip_restore_alias(tmpdir, config_writer, django_db_blocker):
     config_writer(base_dir=BACKUPS_DIR)
     backup = Backup.prepare_restore(
