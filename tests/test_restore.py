@@ -31,7 +31,7 @@ def test_restore_db(tmpdir, config_writer, django_db_blocker):
         assert count > 0
 
 
-def test_restore_different_db_name(tmpdir, config_writer, django_db_blocker, settings):
+def test_restore_different_db_name_host_port(tmpdir, config_writer, django_db_blocker, settings):
     """
     Test that the database can be restored into a different database name.
 
@@ -70,7 +70,8 @@ def test_restore_different_db_name(tmpdir, config_writer, django_db_blocker, set
 
         # actual call we're testing
         backup.restore(
-            files=False, skip_db=["secondary", "dummy"], db_names={"default": "dummy"}
+            files=False, skip_db=["secondary", "dummy"], db_names={"default": "dummy"},
+            db_hosts={"default": "otherhost"}, db_ports={"default": "5434"}
         )
 
         # check that the db & table is there

@@ -281,10 +281,10 @@ class Backup:
         )
         (stdout, stderr) = process.communicate()
 
-        if stdout:
+        if stdout:  # noqa
             logger.info("stdout: %s", stdout.decode())
 
-        if stderr:
+        if stderr:  # noqa
             logger.info("stderr: %s", stderr.decode())
 
         logger.info("Creating the target database")
@@ -293,10 +293,10 @@ class Backup:
         )
         (stdout, stderr) = process.communicate()
 
-        if stdout:
+        if stdout:  # noqa
             logger.info("stdout: %s", stdout.decode())
 
-        if stderr:
+        if stderr:  # noqa
             logger.info("stderr: %s", stderr.decode())
 
         logger.info("Restoring the target database")
