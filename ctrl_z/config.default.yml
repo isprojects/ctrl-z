@@ -33,3 +33,5 @@ files:
 # Which binaries to use for backup creation/restore
 pg_dump_binary: /usr/bin/pg_dump
 pg_restore_binary: /usr/bin/pg_restore
+dropdb_binary: /usr/bin/dropdb
+createdb_binary: /usr/bin/createdb

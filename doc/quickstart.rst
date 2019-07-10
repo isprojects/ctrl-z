@@ -11,6 +11,8 @@ Requirements
 * Python 3.6 or higher
 * setuptools 30.3.0 or higher
 * PostgreSQL
+* Database user must have permissions to drop/create the target database(s)
+  for DB restore
 
 Install
 -------
@@ -139,5 +141,15 @@ Restore the backup at the specified path.
 * ``--db-name``: convenient for loading a different source database name into
   the target environment. Syntax: ``alias:name``, for example
   ``default:project_staging``. Dump files are saved with the database name in
+  the file name, so this allows you to refer to that. Can be used multiple
+  times for multi-db setups.
+* ``--db-host``: convenient for loading a different source database host into
+  the target environment. Syntax: ``alias:host``, for example
+  ``default:localhost``. Dump files are saved with the database host in
+  the file name, so this allows you to refer to that. Can be used multiple
+  times for multi-db setups.
+* ``--db-port``: convenient for loading a different source database port into
+  the target environment. Syntax: ``alias:port``, for example
+  ``default:5432``. Dump files are saved with the database port in
   the file name, so this allows you to refer to that. Can be used multiple
   times for multi-db setups.
