@@ -182,8 +182,8 @@ def test_db_restore_dbname_alias(tmpdir, config_writer, mocker):
     )
 
 
-@pytest.mark.freeze_time('2018-05-29')
-def test_show_backup_dir(tmpdir, config_writer):
+def test_show_backup_dir(tmpdir, config_writer, freezer):
+    freezer.move_to('2018-05-29')
     config_path = str(tmpdir.join('config.yml'))
     backups_base = tmpdir.mkdir('backups')
 

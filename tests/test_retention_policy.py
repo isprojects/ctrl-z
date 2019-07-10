@@ -1,13 +1,11 @@
 """
 Test that the backup retention policy is correctly implemented.
 """
-import pytest
-
 from ctrl_z.retention import RetentionPolicy
 
 
-@pytest.mark.freeze_time('2018-06-27')  # it's Wednesday
-def test_rotation(tmpdir):
+def test_rotation(tmpdir, freezer):
+    freezer.move_to('2018-06-27')  # it's Wednesday
     base = tmpdir.mkdir('backups')
     base.mkdir('2018-06-24-daily')  # should be gone
     base.mkdir('2018-06-25-weekly')  # should be gone
@@ -20,8 +18,8 @@ def test_rotation(tmpdir):
     assert remaining == ['2018-06-26-daily']
 
 
-@pytest.mark.freeze_time('2018-06-26')  # it's Tuesday
-def test_gaps(tmpdir):
+def test_gaps(tmpdir, freezer):
+    freezer.move_to('2018-06-26')  # it's Tuesday
     base = tmpdir.mkdir('backups')
     base.mkdir('2018-06-11-weekly')
     base.mkdir('2018-06-12-daily')
@@ -54,11 +52,11 @@ def test_gaps(tmpdir):
     ]
 
 
-@pytest.mark.freeze_time('2018-06-26')  # it's Tuesday
-def test_do_not_touch_other_directories(tmpdir):
+def test_do_not_touch_other_directories(tmpdir, freezer):
     """
     Only folders that look like backup dirs may be rotated.
     """
+    freezer.move_to('2018-06-26')  # it's Tuesday
     base = tmpdir.mkdir('backups')
     # keep these
     base.mkdir('no-touchy')
