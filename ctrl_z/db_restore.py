@@ -6,7 +6,7 @@ from django.db.utils import OperationalError, ProgrammingError
 logger = logging.getLogger(__name__)
 
 
-def test_migrations_table(using: str='default') -> bool:
+def test_migrations_table(using: str = "default") -> bool:
     """
     Use the django_migrations table to verify a backup restore.
 

@@ -19,13 +19,12 @@ class BackupError(Exception):
 
 
 class Backup:
-
     def __init__(self, config: Config, restore=False):
         self.config = config
 
         self.base_dir = self.config.base_dir
-        self.db_dir = os.path.join(self.base_dir, 'db')
-        self.files_dir = os.path.join(self.base_dir, 'files')
+        self.db_dir = os.path.join(self.base_dir, "db")
+        self.files_dir = os.path.join(self.base_dir, "files")
 
     @classmethod
     def from_config(cls, config_file):
@@ -37,19 +36,22 @@ class Backup:
         config = Config.from_file(config_file, base_dir=base_dir, restore=True)
         return cls(config=config)
 
-    def restore(self, db=True, skip_db: Optional[List[str]] = None,
-                files=True, db_names: Optional[dict] = None,
-                db_hosts: Optional[dict] = None, db_ports: Optional[dict] = None):
+    def restore(
+        self,
+        db=True,
+        skip_db: Optional[List[str]] = None,
+        files=True,
+        db_names: Optional[dict] = None,
+        db_hosts: Optional[dict] = None,
+        db_ports: Optional[dict] = None,
+    ):
         logger.info("Starting restore of %s", self.base_dir)
 
         if files:
             self.restore_files()
         if db:
             self.restore_databases(
-                skip_db=skip_db,
-                db_names=db_names,
-                db_hosts=db_hosts,
-                db_ports=db_ports
+                skip_db=skip_db, db_names=db_names, db_hosts=db_hosts, db_ports=db_ports
             )
 
         logger.info("Finished restore of %s", self.base_dir)
@@ -57,10 +59,7 @@ class Backup:
     def create_directories(self):
         logger.debug("Checking/creating folder tree for backups")
 
-        paths = (
-            self.db_dir,
-            self.files_dir
-        )
+        paths = (self.db_dir, self.files_dir)
         for path in paths:
             if os.path.exists(path):
                 if not os.path.isdir(path):
@@ -92,19 +91,23 @@ class Backup:
         """
         Report on the success or failure of the backup.
         """
-        if not self.config.report['enabled']:
+        if not self.config.report["enabled"]:
             logger.info("Report not enabled, aborting")
             return
 
-        recipients = self.config.report['to']
+        recipients = self.config.report["to"]
 
         logger.info("Sending report to %s", recipients)
 
-        with open(os.path.join(self.base_dir, self.config.logging['filename']), 'r') as logfile:
+        with open(
+            os.path.join(self.base_dir, self.config.logging["filename"]), "r"
+        ) as logfile:
             log_content = logfile.read()
 
         now = datetime.utcnow()
-        subject_template = "Backup {now} failed" if has_errors else "Backup {now} succeeded"
+        subject_template = (
+            "Backup {now} failed" if has_errors else "Backup {now} succeeded"
+        )
         subject = subject_template.format(now=now)
         send_mail(subject, log_content, settings.DEFAULT_FROM_EMAIL, recipients)
 
@@ -120,8 +123,13 @@ class Backup:
                 continue
             self._backup_database(db_config)
 
-    def restore_databases(self, skip_db: Optional[List[str]], db_names: Optional[dict] = None,
-                          db_hosts: Optional[dict] = None, db_ports: Optional[dict] = None):
+    def restore_databases(
+        self,
+        skip_db: Optional[List[str]],
+        db_names: Optional[dict] = None,
+        db_hosts: Optional[dict] = None,
+        db_ports: Optional[dict] = None,
+    ):
         logger.info("Restoring %d databases", len(settings.DATABASES))
         for alias, db_config in settings.DATABASES.items():
             if skip_db and alias in skip_db:
@@ -154,8 +162,7 @@ class Backup:
 
     def _get_file_directories(self) -> list:
         directories = [
-            getattr(settings, setting)
-            for setting in self.config.files['directories']
+            getattr(settings, setting) for setting in self.config.files["directories"]
         ]
         return directories
 
@@ -168,9 +175,9 @@ class Backup:
         self.config.retention_policy.rotate(rotate_base)
 
     def _get_conn_params(self, db_config: dict) -> tuple:
-        host = db_config.get('HOST', '') or 'localhost'
-        port = db_config.get('PORT', '') or 5432
-        name = db_config['NAME']
+        host = db_config.get("HOST", "") or "localhost"
+        port = db_config.get("PORT", "") or 5432
+        name = db_config["NAME"]
         return host, port, name
 
     def _get_db_filename(self, db_config: dict) -> str:
@@ -185,22 +192,26 @@ class Backup:
 
         args = [
             program,
-            '-Fc',  # custom format, guaranteed that it can be loaded in newer Postgres versions
-            '-f{outfile}'.format(outfile=outfile),
+            "-Fc",  # custom format, guaranteed that it can be loaded in newer Postgres versions
+            "-f{outfile}".format(outfile=outfile),
         ]
 
         logger.info("Dumping database %s (%s:%s)", name, host, port)
 
         env = os.environ.copy()
-        env.update({
-            'PGHOST': host,
-            'PGPORT': str(port),
-            'PGPASSWORD': db_config['PASSWORD'],
-            'PGUSER': db_config['USER'],
-            'PGDATABASE': name,
-        })
+        env.update(
+            {
+                "PGHOST": host,
+                "PGPORT": str(port),
+                "PGPASSWORD": db_config["PASSWORD"],
+                "PGUSER": db_config["USER"],
+                "PGDATABASE": name,
+            }
+        )
 
-        process = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(
+            args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         (stdout, stderr) = process.communicate()
 
         if stdout:
@@ -212,15 +223,19 @@ class Backup:
 
         logger.info("Database backup saved to %s", outfile)
 
-    def _restore_database(self, alias: str, db_config: dict,
-                          source_db_name: Optional[str] = None,
-                          source_db_host: Optional[str] = None,
-                          source_db_port: Optional[str] = None):
+    def _restore_database(
+        self,
+        alias: str,
+        db_config: dict,
+        source_db_name: Optional[str] = None,
+        source_db_host: Optional[str] = None,
+        source_db_port: Optional[str] = None,
+    ):
         program = self.config.pg_restore_binary
 
         source_db_config = db_config.copy()
         if source_db_name:
-            source_db_config['NAME'] = source_db_name
+            source_db_config["NAME"] = source_db_name
         if source_db_host:
             source_db_config["HOST"] = source_db_host
         if source_db_port:
@@ -240,33 +255,30 @@ class Backup:
         dropdb_args = [
             self.config.dropdb_binary,
             "--if-exists",
-            source_db_config['NAME']
+            source_db_config["NAME"],
         ]
 
-        createdb_args = [
-            self.config.createdb_binary,
-            source_db_config['NAME'],
-        ]
+        createdb_args = [self.config.createdb_binary, source_db_config["NAME"]]
 
-        args = [
-            program,
-            "-d%s" % source_db_config['NAME'],
-            backup_file
-        ]
+        args = [program, "-d%s" % source_db_config["NAME"], backup_file]
 
         logger.info("Restoring database %s (%s:%s)", name, host, port)
 
         env = os.environ.copy()
-        env.update({
-            'PGHOST': host,
-            'PGPORT': str(port),
-            'PGPASSWORD': db_config['PASSWORD'],
-            'PGUSER': db_config['USER'],
-            'PGDATABASE': name,
-        })
+        env.update(
+            {
+                "PGHOST": host,
+                "PGPORT": str(port),
+                "PGPASSWORD": db_config["PASSWORD"],
+                "PGUSER": db_config["USER"],
+                "PGDATABASE": name,
+            }
+        )
 
         logger.info("Dropping the target database, if it exists")
-        process = subprocess.Popen(dropdb_args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(
+            dropdb_args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         (stdout, stderr) = process.communicate()
 
         if stdout:
@@ -276,7 +288,9 @@ class Backup:
             logger.info("stderr: %s", stderr.decode())
 
         logger.info("Creating the target database")
-        process = subprocess.Popen(createdb_args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(
+            createdb_args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         (stdout, stderr) = process.communicate()
 
         if stdout:
@@ -286,7 +300,9 @@ class Backup:
             logger.info("stderr: %s", stderr.decode())
 
         logger.info("Restoring the target database")
-        process = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(
+            args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         (stdout, stderr) = process.communicate()
 
         if stdout:
@@ -296,14 +312,14 @@ class Backup:
             logger.info("stderr: %s", stderr.decode())
 
         # test if the restore was okay
-        test_function = import_string(self.config.database['test_function'])
+        test_function = import_string(self.config.database["test_function"])
         if not test_function(alias):
             raise BackupError("Restore of '%s' database failed" % name)
 
         logger.info("Database backup %s restored", backup_file)
 
     def _backup_directory(self, directory: str):
-        overwrite_existing = self.config.files['overwrite_existing_directory']
+        overwrite_existing = self.config.files["overwrite_existing_directory"]
 
         dirname = os.path.basename(directory)
         dest = os.path.join(self.files_dir, dirname)
@@ -311,7 +327,9 @@ class Backup:
         logger.info("Backing up %s to %s", directory, dest)
 
         if os.path.exists(dest):
-            logger.debug("Target destination exists, which conflicts with shutil.copytree")
+            logger.debug(
+                "Target destination exists, which conflicts with shutil.copytree"
+            )
             if overwrite_existing:
                 logger.info("Replacing %s", dest)
                 shutil.rmtree(dest)
@@ -368,40 +386,37 @@ class Backup:
 
 
 def configure_logging(config: Config):
-    level = config.logging['level']
+    level = config.logging["level"]
 
     base_dir = config.base_dir
     if not os.path.exists(base_dir):
         os.makedirs(base_dir)
 
-    logfile = os.path.join(base_dir, config.logging['filename'])
+    logfile = os.path.join(base_dir, config.logging["filename"])
 
-    logging.config.dictConfig({
-        'version': 1,
-        'formatters': {
-            'default': {
-                'format': '%(asctime)s - %(levelname)s - %(message)s',
-                'datefmt': '%Y-%m-%d %H:%M:%S'
-            }
-        },
-        'handlers': {
-            'console': {
-                'level': level,
-                'class': 'logging.StreamHandler',
-                'formatter': 'default',
+    logging.config.dictConfig(
+        {
+            "version": 1,
+            "formatters": {
+                "default": {
+                    "format": "%(asctime)s - %(levelname)s - %(message)s",
+                    "datefmt": "%Y-%m-%d %H:%M:%S",
+                }
             },
-            'file': {
-                'level': level,
-                'class': 'logging.FileHandler',
-                'formatter': 'default',
-                'filename': logfile,
+            "handlers": {
+                "console": {
+                    "level": level,
+                    "class": "logging.StreamHandler",
+                    "formatter": "default",
+                },
+                "file": {
+                    "level": level,
+                    "class": "logging.FileHandler",
+                    "formatter": "default",
+                    "filename": logfile,
+                },
             },
-        },
-        'loggers': {
-            'ctrl_z': {
-                'level': level,
-                'handlers': ['console', 'file'],
-            }
-        },
-        'disable_existing_loggers': False,
-    })
+            "loggers": {"ctrl_z": {"level": level, "handlers": ["console", "file"]}},
+            "disable_existing_loggers": False,
+        }
+    )
