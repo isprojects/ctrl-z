@@ -18,6 +18,9 @@ def pytest_configure():
                 'USER': os.getenv('PGUSER', 'ctrlz'),
                 'PASSWORD': os.getenv('PGPASSWORD', 'ctrlz'),
                 'PORT': os.getenv('PGPORT', 5432),
+                'TEST': {
+                    'NAME': 'ctrlz',
+                }
             },
             'secondary': {
                 'ENGINE': 'django.db.backends.postgresql',
@@ -25,6 +28,9 @@ def pytest_configure():
                 'USER': os.getenv('PGUSER', 'ctrlz'),
                 'PASSWORD': os.getenv('PGPASSWORD', 'ctrlz'),
                 'PORT': os.getenv('PGPORT', 5432),
+                'TEST': {
+                    'NAME': 'ctrlz2',
+                }
             },
         },
         MEDIA_ROOT=tempfile.mkdtemp(),
