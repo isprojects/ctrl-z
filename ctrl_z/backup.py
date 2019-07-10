@@ -171,7 +171,6 @@ class Backup:
             program,
             '-Fc',  # custom format, guaranteed that it can be loaded in newer Postgres versions
             '-f{outfile}'.format(outfile=outfile),
-            '-C',  # include commands to create database
         ]
 
         logger.info("Dumping database %s (%s:%s)", name, host, port)

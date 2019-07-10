@@ -51,7 +51,7 @@ def test_backup_skip_db(tmpdir, settings, config_writer):
     filenames = [item.basename for item in backup_dir.join('db').listdir()]
 
     port = settings.DATABASES['secondary']['PORT']
-    assert filenames == ['localhost.{port}.ctrlz2.custom'.format(port=port)]
+    assert filenames == ['localhost.{port}.test_ctrlz2.custom'.format(port=port)]
 
 
 def test_backup_all_db(tmpdir, settings, config_writer):
@@ -66,6 +66,6 @@ def test_backup_all_db(tmpdir, settings, config_writer):
     port1 = settings.DATABASES['default']['PORT']
     port2 = settings.DATABASES['secondary']['PORT']
     assert set(filenames) == {
-        'localhost.{port1}.ctrlz2.custom'.format(port1=port1),
-        'localhost.{port2}.ctrlz.custom'.format(port2=port2),
+        'localhost.{port1}.test_ctrlz2.custom'.format(port1=port1),
+        'localhost.{port2}.test_ctrlz.custom'.format(port2=port2),
     }
