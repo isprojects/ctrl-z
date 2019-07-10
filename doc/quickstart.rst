@@ -11,6 +11,8 @@ Requirements
 * Python 3.6 or higher
 * setuptools 30.3.0 or higher
 * PostgreSQL
+* Database user must have permissions to drop/create the target database(s)
+  for DB restore
 
 Install
 -------
