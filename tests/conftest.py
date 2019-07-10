@@ -25,7 +25,7 @@ def pytest_configure():
                 'USER': os.getenv('PGUSER', 'ctrlz'),
                 'PASSWORD': os.getenv('PGPASSWORD', 'ctrlz'),
                 'PORT': os.getenv('PGPORT', 5432),
-            }
+            },
         },
         MEDIA_ROOT=tempfile.mkdtemp(),
         INSTALLED_APPS=['django.contrib.contenttypes'],

@@ -3,7 +3,7 @@ import os
 import shutil
 import subprocess
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -37,7 +37,7 @@ class Backup:
         config = Config.from_file(config_file, base_dir=base_dir, restore=True)
         return cls(config=config)
 
-    def restore(self, db=True, skip_db=None, files=True, db_names: Optional[dict] = None):
+    def restore(self, db=True, skip_db: Optional[List[str]] = None, files=True, db_names: Optional[dict] = None):
         logger.info("Starting restore of %s", self.base_dir)
 
         if files:
@@ -113,7 +113,7 @@ class Backup:
                 continue
             self._backup_database(db_config)
 
-    def restore_databases(self, skip_db=None, db_names: Optional[dict] = None):
+    def restore_databases(self, skip_db: Optional[List[str]], db_names: Optional[dict] = None):
         logger.info("Restoring %d databases", len(settings.DATABASES))
         for alias, db_config in settings.DATABASES.items():
             if skip_db and alias in skip_db:

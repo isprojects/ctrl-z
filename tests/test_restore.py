@@ -32,24 +32,49 @@ def test_restore_db(tmpdir, config_writer, django_db_blocker):
         assert count > 0
 
 
-def test_restore_different_db_name(tmpdir, config_writer, django_db_blocker):
+def test_restore_different_db_name(tmpdir, config_writer, django_db_blocker, settings):
+    """
+    Test that the database can be restored into a different database name.
+
+    The dump archive contains the name of the source database, but there
+    are scenarious where you want to restore into a different database than
+    the source db name.
+    """
+    # test setup - prep a non-existant db
+    DATABASES = settings.DATABASES.copy()
+    DATABASES["dummy"] = {  # arbitrary different database
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'dummy',
+        'USER': os.getenv('PGUSER', 'ctrlz'),
+        'PASSWORD': os.getenv('PGPASSWORD', 'ctrlz'),
+        'PORT': os.getenv('PGPORT', 5432),
+    }
+    settings.DATABASES = DATABASES
     config_writer(base_dir=BACKUPS_DIR)
     backup = Backup.prepare_restore(
         str(tmpdir.join('config.yml')),
         os.path.join(BACKUPS_DIR, '2018-06-27-daily')
     )
-
+    _connection = connections['dummy']
+    db_name = _connection.get_connection_params()["database"]
     with django_db_blocker.unblock():
+        # ensure the target database does not exist. You can't connect to the dummy
+        # db to drop it, because there may not be open connections, so we use the
+        # default database for that. Note that the user needs to have permissions
+        # to be able to drop the db!
         with connection.cursor() as cursor:
-            cursor.execute('DROP TABLE IF EXISTS django_migrations;')
+            # can't escape this, need to interpolate, see
+            # http://initd.org/psycopg/docs/sql.html
+            cursor.execute("DROP DATABASE IF EXISTS %s;" % db_name)
 
+        # actual call we're testing
         backup.restore(
-            files=False, skip_db='secondary',
+            files=False, skip_db=['secondary', 'dummy'],
             db_names={'default': 'dummy'}
         )
 
-        # check that the table is there
-        with connection.cursor() as cursor:
+        # check that the db & table is there
+        with _connection.cursor() as cursor:
             cursor.execute("SELECT COUNT(*) FROM django_migrations;")
             (count,) = cursor.fetchone()
 
@@ -71,7 +96,7 @@ def test_skip_restore_alias(tmpdir, config_writer, django_db_blocker):
         with connections['secondary'].cursor() as cursor:
             cursor.execute('DROP TABLE IF EXISTS django_migrations;')
 
-        backup.restore(files=False, skip_db='secondary')
+        backup.restore(files=False, skip_db=['secondary'])
 
         with connections['default'].cursor() as cursor:
             cursor.execute("SELECT COUNT(*) FROM django_migrations;")
