@@ -37,10 +37,6 @@ matrix:
 install:
   - pip install tox-travis
 
-before_script:
-  - psql -c 'create database ctrlz;' -U postgres
-  - psql -c 'create database ctrlz2;' -U postgres
-
 script:
   - tox
 

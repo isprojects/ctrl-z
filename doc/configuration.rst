@@ -130,3 +130,13 @@ Which binary to use to dump the database. Defaults to ``/usr/bin/pg_dump``.
 ---------------------
 
 Which binary to use to dump the database. Defaults to ``/usr/bin/pg_restore``.
+
+``createdb_binary``
+-------------------
+
+Which binary to use to create databases. Defaults to ``/usr/bin/createdb``.
+
+``dropdb_binary``
+-----------------
+
+Which binary to use to drop databases. Defaults to ``/usr/bin/dropdb``.
