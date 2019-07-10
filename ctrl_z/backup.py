@@ -215,11 +215,20 @@ class Backup:
                 "different database name.".format(backup_file=backup_file)
             )
 
+        dropdb_args = [
+            self.config.dropdb_binary,
+            "--if-exists",
+            source_db_config['NAME']
+        ]
+
+        createdb_args = [
+            self.config.createdb_binary,
+            source_db_config['NAME'],
+        ]
+
         args = [
             program,
-            "-dpostgres",
-            '-c',  # clean -- drop objects before recreating
-            '-C',  # create the database
+            "-d%s" % source_db_config['NAME'],
             backup_file
         ]
 
@@ -234,6 +243,27 @@ class Backup:
             'PGDATABASE': name,
         })
 
+        logger.info("Dropping the target database, if it exists")
+        process = subprocess.Popen(dropdb_args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (stdout, stderr) = process.communicate()
+
+        if stdout:
+            logger.info("stdout: %s", stdout.decode())
+
+        if stderr:
+            logger.info("stderr: %s", stderr.decode())
+
+        logger.info("Creating the target database")
+        process = subprocess.Popen(createdb_args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (stdout, stderr) = process.communicate()
+
+        if stdout:
+            logger.info("stdout: %s", stdout.decode())
+
+        if stderr:
+            logger.info("stderr: %s", stderr.decode())
+
+        logger.info("Restoring the target database")
         process = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
 

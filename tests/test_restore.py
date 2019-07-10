@@ -1,6 +1,6 @@
 import os
 
-from django.db import connection, connections
+from django.db import ConnectionHandler, connection, connections
 
 import pytest
 
@@ -40,16 +40,17 @@ def test_restore_different_db_name(tmpdir, config_writer, django_db_blocker, set
     are scenarious where you want to restore into a different database than
     the source db name.
     """
-    # test setup - prep a non-existant db
-    DATABASES = settings.DATABASES.copy()
-    DATABASES["dummy"] = {  # arbitrary different database
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'dummy',
-        'USER': os.getenv('PGUSER', 'ctrlz'),
-        'PASSWORD': os.getenv('PGPASSWORD', 'ctrlz'),
-        'PORT': os.getenv('PGPORT', 5432),
-    }
-    settings.DATABASES = DATABASES
+    connections = ConnectionHandler(databases={
+        "default": {'ENGINE': 'django.db.backends.dummy'},
+        "dummy": {  # arbitrary different database
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'dummy',
+            'USER': os.getenv('PGUSER', 'ctrlz'),
+            'PASSWORD': os.getenv('PGPASSWORD', 'ctrlz'),
+            'PORT': os.getenv('PGPORT', 5432),
+        }
+    })
+
     config_writer(base_dir=BACKUPS_DIR)
     backup = Backup.prepare_restore(
         str(tmpdir.join('config.yml')),

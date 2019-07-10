@@ -25,6 +25,8 @@ class Config:
         'files',
         'pg_dump_binary',
         'pg_restore_binary',
+        'dropdb_binary',
+        'createdb_binary',
     ]
 
     def __init__(self, **kwargs):
