@@ -151,7 +151,7 @@ def test_db_restore_alias_not_present(tmpdir, settings, config_writer):
         )
 
 
-def test_db_restore_dbname_alias(tmpdir, config_writer, mocker):
+def test_db_restore_aliases(tmpdir, config_writer, mocker):
     config_path = str(tmpdir.join('config.yml'))
     backups_base = tmpdir.mkdir('backups')
     backup_dir = backups_base.mkdir('2018-05-29-daily')
@@ -166,6 +166,8 @@ def test_db_restore_dbname_alias(tmpdir, config_writer, mocker):
         args=[
             'restore', str(backup_dir),
             '--db-name', 'default:dummy',
+            '--db-host', 'default:localhost',
+            '--db-port', 'default:5432',
             '--db-name', 'secondary:dummy2',
         ],
         config_file=config_path, stdout=StringIO(),
@@ -176,6 +178,12 @@ def test_db_restore_dbname_alias(tmpdir, config_writer, mocker):
         db_names={
             'default': 'dummy',
             'secondary': 'dummy2',
+        },
+        db_hosts={
+            'default': 'localhost',
+        },
+        db_ports={
+            'default': '5432',
         },
         files=True,
         skip_db=None

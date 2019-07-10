@@ -141,3 +141,13 @@ Restore the backup at the specified path.
   ``default:project_staging``. Dump files are saved with the database name in
   the file name, so this allows you to refer to that. Can be used multiple
   times for multi-db setups.
+* ``--db-host``: convenient for loading a different source database host into
+  the target environment. Syntax: ``alias:host``, for example
+  ``default:localhost``. Dump files are saved with the database host in
+  the file name, so this allows you to refer to that. Can be used multiple
+  times for multi-db setups.
+* ``--db-port``: convenient for loading a different source database port into
+  the target environment. Syntax: ``alias:port``, for example
+  ``default:5432``. Dump files are saved with the database port in
+  the file name, so this allows you to refer to that. Can be used multiple
+  times for multi-db setups.

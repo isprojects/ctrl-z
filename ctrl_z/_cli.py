@@ -42,7 +42,7 @@ class db_alias(argparse.Action):
         for value in values:
             if ':' not in value:
                 raise argparse.ArgumentTypeError(
-                    "{0} has an invalid format - it should be 'alias:name'".format(value)
+                    "{0} has an invalid format - it should be 'alias:value'".format(value)
                 )
 
         # check that aliases exist
@@ -135,6 +135,24 @@ class CLI:
                  "restoring from one environment to another one. Format is "
                  "alias:name, where the alias is the alias used in the "
                  "settings of the target, and the name is the database name "
+                 "of the source database."
+        )
+        parser_restore.add_argument(
+            '--db-host', dest='db_hosts',
+            metavar='ALIAS:DB_HOST', nargs="+", action=db_alias,
+            help="Mapping of database alias to database host. Useful if you're "
+                 "restoring from one environment to another one. Format is "
+                 "alias:host, where the alias is the alias used in the "
+                 "settings of the target, and the host is the database host "
+                 "of the source database."
+        )
+        parser_restore.add_argument(
+            '--db-port', dest='db_ports',
+            metavar='ALIAS:DB_PORT', nargs="+", action=db_alias,
+            help="Mapping of database alias to database port. Useful if you're "
+                 "restoring from one environment to another one. Format is "
+                 "alias:port, where the alias is the alias used in the "
+                 "settings of the target, and the port is the database port "
                  "of the source database."
         )
         parser_restore.add_argument(
@@ -247,6 +265,8 @@ class CLI:
         skip_db = options.skip_db
         restore_files = options.restore_files
         db_names = dict(options.db_names or ())
+        db_hosts = dict(options.db_hosts or ())
+        db_ports = dict(options.db_ports or ())
 
         backup = self._backup
 
@@ -254,8 +274,12 @@ class CLI:
         has_errors = False
         try:
             backup.restore(
-                db=restore_db, skip_db=skip_db,
-                files=restore_files, db_names=db_names
+                db=restore_db,
+                skip_db=skip_db,
+                files=restore_files,
+                db_names=db_names,
+                db_hosts=db_hosts,
+                db_ports=db_ports,
             )
         except Exception:
             has_errors = True

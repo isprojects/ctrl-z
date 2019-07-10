@@ -37,13 +37,20 @@ class Backup:
         config = Config.from_file(config_file, base_dir=base_dir, restore=True)
         return cls(config=config)
 
-    def restore(self, db=True, skip_db: Optional[List[str]] = None, files=True, db_names: Optional[dict] = None):
+    def restore(self, db=True, skip_db: Optional[List[str]] = None,
+                files=True, db_names: Optional[dict] = None,
+                db_hosts: Optional[dict] = None, db_ports: Optional[dict] = None):
         logger.info("Starting restore of %s", self.base_dir)
 
         if files:
             self.restore_files()
         if db:
-            self.restore_databases(skip_db=skip_db, db_names=db_names)
+            self.restore_databases(
+                skip_db=skip_db,
+                db_names=db_names,
+                db_hosts=db_hosts,
+                db_ports=db_ports
+            )
 
         logger.info("Finished restore of %s", self.base_dir)
 
@@ -113,13 +120,22 @@ class Backup:
                 continue
             self._backup_database(db_config)
 
-    def restore_databases(self, skip_db: Optional[List[str]], db_names: Optional[dict] = None):
+    def restore_databases(self, skip_db: Optional[List[str]], db_names: Optional[dict] = None,
+                          db_hosts: Optional[dict] = None, db_ports: Optional[dict] = None):
         logger.info("Restoring %d databases", len(settings.DATABASES))
         for alias, db_config in settings.DATABASES.items():
             if skip_db and alias in skip_db:
                 continue
             source_db_name = db_names.get(alias) if db_names else None
-            self._restore_database(alias, db_config, source_db_name=source_db_name)
+            source_db_host = db_hosts.get(alias) if db_hosts else None
+            source_db_port = db_ports.get(alias) if db_ports else None
+            self._restore_database(
+                alias,
+                db_config,
+                source_db_name=source_db_name,
+                source_db_host=source_db_host,
+                source_db_port=source_db_port,
+            )
 
     def files(self):
         """
@@ -196,12 +212,19 @@ class Backup:
 
         logger.info("Database backup saved to %s", outfile)
 
-    def _restore_database(self, alias: str, db_config: dict, source_db_name: Optional[str] = None):
+    def _restore_database(self, alias: str, db_config: dict,
+                          source_db_name: Optional[str] = None,
+                          source_db_host: Optional[str] = None,
+                          source_db_port: Optional[str] = None):
         program = self.config.pg_restore_binary
 
         source_db_config = db_config.copy()
         if source_db_name:
             source_db_config['NAME'] = source_db_name
+        if source_db_host:
+            source_db_config["HOST"] = source_db_host
+        if source_db_port:
+            source_db_config["PORT"] = source_db_port
 
         host, port, name = self._get_conn_params(db_config)
         filename = self._get_db_filename(source_db_config)
