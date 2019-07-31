@@ -1,6 +1,6 @@
 import os
 
-from django.db import ConnectionHandler, connection, connections
+from django.db import connection, connections
 
 import pytest
 
@@ -31,7 +31,9 @@ def test_restore_db(tmpdir, config_writer, django_db_blocker):
         assert count > 0
 
 
-def test_restore_different_db_name_host_port(tmpdir, config_writer, django_db_blocker, settings):
+def test_restore_different_db_name_host_port(
+    tmpdir, config_writer, django_db_blocker, settings
+):
     """
     Test that the database can be restored into a different database name.
 
@@ -39,43 +41,22 @@ def test_restore_different_db_name_host_port(tmpdir, config_writer, django_db_bl
     are scenarious where you want to restore into a different database than
     the source db name.
     """
-    connections = ConnectionHandler(
-        databases={
-            "default": {"ENGINE": "django.db.backends.dummy"},
-            "dummy": {  # arbitrary different database
-                "ENGINE": "django.db.backends.postgresql",
-                "NAME": "dummy",
-                "USER": os.getenv("PGUSER", "ctrlz"),
-                "PASSWORD": os.getenv("PGPASSWORD", "ctrlz"),
-                "PORT": os.getenv("PGPORT", 5432),
-            },
-        }
-    )
-
     config_writer(base_dir=BACKUPS_DIR)
     backup = Backup.prepare_restore(
         str(tmpdir.join("config.yml")), os.path.join(BACKUPS_DIR, "2018-06-27-daily")
     )
-    _connection = connections["dummy"]
-    db_name = _connection.get_connection_params()["database"]
     with django_db_blocker.unblock():
-        # ensure the target database does not exist. You can't connect to the dummy
-        # db to drop it, because there may not be open connections, so we use the
-        # default database for that. Note that the user needs to have permissions
-        # to be able to drop the db!
-        with connection.cursor() as cursor:
-            # can't escape this, need to interpolate, see
-            # http://initd.org/psycopg/docs/sql.html
-            cursor.execute("DROP DATABASE IF EXISTS %s;" % db_name)
 
-        # actual call we're testing
         backup.restore(
-            files=False, skip_db=["secondary", "dummy"], db_names={"default": "dummy"},
-            db_hosts={"default": "otherhost"}, db_ports={"default": "5434"}
+            files=False,
+            skip_db=["secondary", "dummy"],
+            db_names={"default": "dummy"},
+            db_hosts={"default": "otherhost"},
+            db_ports={"default": "5434"},
         )
 
         # check that the db & table is there
-        with _connection.cursor() as cursor:
+        with connection.cursor() as cursor:
             cursor.execute("SELECT COUNT(*) FROM django_migrations;")
             (count,) = cursor.fetchone()
 

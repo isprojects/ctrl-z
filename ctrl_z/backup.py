@@ -252,15 +252,11 @@ class Backup:
                 "different database name.".format(backup_file=backup_file)
             )
 
-        dropdb_args = [
-            self.config.dropdb_binary,
-            "--if-exists",
-            source_db_config["NAME"],
-        ]
+        dropdb_args = [self.config.dropdb_binary, "--if-exists", db_config["NAME"]]
 
-        createdb_args = [self.config.createdb_binary, source_db_config["NAME"]]
+        createdb_args = [self.config.createdb_binary, db_config["NAME"]]
 
-        args = [program, "-d%s" % source_db_config["NAME"], backup_file]
+        args = [program, "-d%s" % db_config["NAME"], backup_file]
 
         logger.info("Restoring database %s (%s:%s)", name, host, port)
 
