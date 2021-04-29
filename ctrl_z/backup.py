@@ -252,7 +252,7 @@ class Backup:
                 "different database name.".format(backup_file=backup_file)
             )
 
-        dropdb_args = [self.config.dropdb_binary, "--if-exists", db_config["NAME"], "--maintenance-db=template0"]
+        dropdb_args = [self.config.dropdb_binary, "--if-exists", db_config["NAME"], "--maintenance-db=template1"]
 
         createdb_args = [self.config.createdb_binary, db_config["NAME"]]
 
