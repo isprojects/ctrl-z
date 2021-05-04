@@ -7,6 +7,7 @@ from typing import List, Optional
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db import connections
 from django.utils.module_loading import import_string
 
 from .config import Config
@@ -272,6 +273,10 @@ class Backup:
         )
 
         logger.info("Dropping the target database, if it exists")
+        
+        for conn in connections.all():
+            conn.close()
+        
         process = subprocess.Popen(
             dropdb_args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
