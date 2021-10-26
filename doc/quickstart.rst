@@ -21,6 +21,10 @@ Install
 
     pip install ctrl-z
 
+    For development: 
+    pip install -e .[tests,pep8,docs,release]
+
+
 
 .. _usage:
 
