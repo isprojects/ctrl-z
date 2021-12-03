@@ -257,7 +257,7 @@ class Backup:
 
         createdb_args = [self.config.createdb_binary, db_config["NAME"]]
 
-        args = [program, "-d%s" % db_config["NAME"], backup_file]
+        args = [program, "-d%s" % db_config["NAME"], "-O", backup_file]
 
         logger.info("Restoring database %s (%s:%s)", name, host, port)
 
