@@ -6,7 +6,7 @@
 Welcome to CTRL-Z's documentation!
 ===========================================
 
-|build-status| |requirements| |coverage|
+|build-status| |coverage|
 
 |python-versions| |django-versions| |pypi-version|
 
@@ -33,10 +33,6 @@ Indices and tables
 
 .. |build-status| image:: https://travis-ci.org/isprojects/ctrl-z.svg?branch=develop
     :target: https://travis-ci.org/isprojects/ctrl-z
-
-.. |requirements| image:: https://requires.io/github/isprojects/ctrl-z/requirements.svg?branch=develop
-    :target: https://requires.io/github/isprojects/ctrl-z/requirements/?branch=develop
-    :alt: Requirements status
 
 .. |coverage| image:: https://codecov.io/gh/isprojects/ctrl-z/branch/develop/graph/badge.svg
     :target: https://codecov.io/gh/isprojects/ctrl-z
