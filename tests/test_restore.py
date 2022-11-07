@@ -1,8 +1,9 @@
+import logging
 import os
+import pytest
 
 from django.db import connection, connections
-
-import pytest
+from re import search
 
 from ctrl_z import Backup
 from ctrl_z.backup import BackupError
@@ -164,3 +165,23 @@ def test_restore_folders_directories_setting(settings, tmpdir, config_writer):
         item.basename for item in tmpdir.join("private_media").listdir()
     }
     assert private_media_files == {"2"}
+
+
+def test_restore_folders_skip_folder(settings, tmpdir, config_writer, caplog):
+    """
+    Assert that non existing directory is skipped
+    """
+    settings.PRIVATE_MEDIA_ROOT = str(tmpdir.join("private_media"))
+    settings.NON_EXISTING_DIR = "NON_EXISTING_DIR"
+
+    config_writer(base_dir=BACKUPS_DIR, files={"directories": ["PRIVATE_MEDIA_ROOT", "NON_EXISTING_DIR"]})
+
+    backup = Backup.prepare_restore(
+        str(tmpdir.join("config.yml")), os.path.join(BACKUPS_DIR, "2018-06-27-daily")
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        backup.restore(db=False)
+
+    assert bool(search("Not restoring.+NON_EXISTING_DIR - directory doesn't exist", caplog.text))
+

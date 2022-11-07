@@ -162,6 +162,9 @@ class Backup:
             self._restore_directory(path)
 
     def _get_file_directories(self) -> list:
+        if not (self.config.files.get("directories")):
+            return []
+
         directories = [
             getattr(settings, setting) for setting in self.config.files["directories"]
         ]
@@ -320,6 +323,10 @@ class Backup:
         logger.info("Database backup %s restored", backup_file)
 
     def _backup_directory(self, directory: str):
+        if not os.path.exists(directory):
+            logger.info("Source directory %s does not exist, skipping", directory)
+            return
+
         overwrite_existing = self.config.files["overwrite_existing_directory"]
 
         dirname = os.path.basename(directory)
@@ -337,10 +344,6 @@ class Backup:
             else:
                 logger.info("Skipping %s", dest)
                 return
-
-        if not os.path.exists(directory):
-            logger.info("Source directory %s does not exist, skipping", directory)
-            return
 
         shutil.copytree(directory, dest)
 
