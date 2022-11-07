@@ -183,5 +183,5 @@ def test_restore_folders_skip_folder(settings, tmpdir, config_writer, caplog):
     with caplog.at_level(logging.DEBUG):
         backup.restore(db=False)
 
-    assert bool(search("Not restoring.+NON_EXISTING_DIR - directory doesn't exist", caplog.text))
+    assert search("Not restoring.+NON_EXISTING_DIR - directory doesn't exist", caplog.text) is not None
 
