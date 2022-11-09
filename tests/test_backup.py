@@ -1,3 +1,4 @@
+import logging
 import os
 
 from ctrl_z import Backup
@@ -19,6 +20,22 @@ def test_backup_no_db(tmpdir, settings, config_writer):
 
     # expected no database
     assert backup_dir.join("db").listdir() == []
+
+
+def test_backup_files_skip_directory(tmpdir, settings, config_writer, caplog):
+    """
+    Assert that non existing directory is skipped
+    """
+    settings.MEDIA_ROOT = str(tmpdir.mkdir("media"))
+    settings.NON_EXISTING_DIR = "NON_EXISTING_DIR"
+
+    config_writer(files={"directories": ["MEDIA_ROOT", "NON_EXISTING_DIR"], "overwrite_existing_directory": "yes"},)
+    backup = Backup.from_config(str(tmpdir.join("config.yml")))
+
+    with caplog.at_level(logging.DEBUG):
+        backup.full(db=False, files=True)
+
+    assert "Source directory NON_EXISTING_DIR does not exist, skipping" in caplog.text
 
 
 def test_backup_files_overwrite_target(tmpdir, settings, config_writer):
