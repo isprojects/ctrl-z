@@ -113,6 +113,11 @@ class CLI:
             help="Do not backup the databases",
         )
         parser_backup.add_argument(
+            "--version",
+            action="store",
+            help="Version to include in a version file in the backup",
+        )
+        parser_backup.add_argument(
             "--skip-db",
             nargs="+",
             help="Database aliases to skip - use multiple times for each "
@@ -268,13 +273,14 @@ class CLI:
         backup_db = options.backup_db
         skip_db = options.skip_db
         backup_files = options.backup_files
+        version = options.version
 
         backup = self._backup
 
         # perform the backup
         has_errors = False
         try:
-            backup.full(db=backup_db, skip_db=skip_db, files=backup_files)
+            backup.full(db=backup_db, skip_db=skip_db, files=backup_files, version = version)
         except Exception:
             has_errors = True
             logger.exception("Backup failed")

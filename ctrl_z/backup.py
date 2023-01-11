@@ -69,8 +69,12 @@ class Backup:
 
             logger.debug("Creating directory %s", path)
             os.makedirs(path)
+    
+    def create_version_file(self, version):
+        with open(os.path.join(self.base_dir, "VERSION"), "w")  as fo:
+            fo.write(version)
 
-    def full(self, db=True, skip_db=None, files=True):
+    def full(self, db=True, skip_db=None, files=True, version = None):
         """
         Run all the components of the full backup.
 
@@ -82,6 +86,8 @@ class Backup:
         logger.info("Performing full backup")
         self.rotate()
         self.create_directories()
+        if version is not None:
+            self.create_version_file(version)
         if db:
             self.databases(skip_db=skip_db)
         if files:
@@ -326,7 +332,6 @@ class Backup:
         dest = os.path.join(self.files_dir, dirname)
 
         logger.info("Backing up %s to %s", directory, dest)
-
         if os.path.exists(dest):
             logger.debug(
                 "Target destination exists, which conflicts with shutil.copytree"

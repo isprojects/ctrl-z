@@ -62,6 +62,42 @@ def test_full_backup(tmpdir, settings, config_writer):
     assert sorted(subdirs) == ["backup.log", "db", "files"]
 
 
+
+def test_version_full_backup(tmpdir, settings, config_writer):
+    config_path = str(tmpdir.join("config.yml"))
+    backups_base = tmpdir.join("backups")
+
+    config_writer(config_path, base_dir=str(backups_base))
+
+    # prevent actual db access
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning)
+        settings.DATABASES = {}
+    settings.MEDIA_ROOT = str(tmpdir.join("media"))
+
+    cli(args=["backup", "--version", "test"], config_file=config_path, stdout=StringIO())
+
+    expected_date = datetime.utcnow().strftime("%Y-%m-%d")
+
+    # assert that the backup directory was created
+    children = os.listdir(str(backups_base))
+    assert len(children) == 1
+    backup_dir = children[0]
+    assert backup_dir.startswith(expected_date)
+
+    full_path = backups_base.join(backup_dir)
+    subdirs = os.listdir(str(full_path))
+    assert sorted(subdirs) == ["VERSION", "backup.log", "db", "files" ]
+
+    version_file = full_path.listdir()[-1]
+    assert version_file.isdir() == False
+    assert version_file.isfile() == True
+    assert version_file.basename == "VERSION"
+    assert version_file.readlines() == ["test"]
+
+
+
+
 def test_full_restore(tmpdir, settings, config_writer):
     config_path = str(tmpdir.join("config.yml"))
     backups_base = tmpdir.mkdir("backups")
