@@ -75,7 +75,7 @@ class Backup:
         version_path = os.path.join(self.base_dir, "version")
         if not os.path.exists(version_path):
             os.mkdir(version_path)
-        with open(os.path.join(version_path, version) + ".txt", "w")  as fo:
+        with open(version_path + "/" + version + ".txt", "w")  as fo:
             fo.write(version)
 
 
