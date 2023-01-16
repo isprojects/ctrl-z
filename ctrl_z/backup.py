@@ -57,10 +57,13 @@ class Backup:
 
         logger.info("Finished restore of %s", self.base_dir)
 
-    def create_directories(self):
+    def create_directories(self, version=None):
         logger.debug("Checking/creating folder tree for backups")
 
-        paths = (self.db_dir, self.files_dir)
+        paths = [self.db_dir, self.files_dir]
+        if version:
+            paths.append(os.path.join(self.base_dir, "version"))
+
         for path in paths:
             if os.path.exists(path):
                 if not os.path.isdir(path):
@@ -70,10 +73,9 @@ class Backup:
             os.makedirs(path)
     
   
-    def create_version_folder_and_file(self, version):
+    def create_version_file(self, version):
         version_path = os.path.join(self.base_dir, "version")
-        os.makedirs(version_path, exist_ok=True)
-        with open(version_path + "/" + version + ".txt", "w")  as fo:
+        with open(os.path.join(version_path, version +".txt"), "w+")  as fo:
             fo.write(version)
 
 
@@ -90,9 +92,12 @@ class Backup:
         """
         logger.info("Performing full backup")
         self.rotate()
-        self.create_directories()
-        if version is not None:
-            self.create_version_folder_and_file(version)
+        if version:
+            self.create_directories(True)
+            self.create_version_file(version)
+        else:
+            self.create_directories()
+
         if db:
             self.databases(skip_db=skip_db)
         if files:
