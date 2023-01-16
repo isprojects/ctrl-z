@@ -74,7 +74,7 @@ class Backup:
     def create_version_folder_and_file(self, version):
         version_path = os.path.join(self.base_dir, "version")
         if not os.path.exists(version_path):
-            os.mkdir(version_path)
+            os.makedirs(version_path)
         with open(version_path + "/" + version + ".txt", "w")  as fo:
             fo.write(version)
 
