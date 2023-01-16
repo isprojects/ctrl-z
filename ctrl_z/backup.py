@@ -66,15 +66,13 @@ class Backup:
                 if not os.path.isdir(path):
                     raise BackupError("Path %s exists, but is not a directory!" % path)
                 continue
-
             logger.debug("Creating directory %s", path)
             os.makedirs(path)
     
   
     def create_version_folder_and_file(self, version):
         version_path = os.path.join(self.base_dir, "version")
-        if not os.path.exists(version_path):
-            os.makedirs(version_path)
+        os.makedirs(version_path, exist_ok=True)
         with open(version_path + "/" + version + ".txt", "w")  as fo:
             fo.write(version)
 
