@@ -78,8 +78,10 @@ def test_backup_db_version_file(tmpdir, settings, config_writer):
     backup.full(db=True, files=False, version="TEST")
 
     backup_dir = tmpdir.join("backups").listdir()[0]
-    version_file = backup_dir.listdir()[-1]
-    assert version_file.basename == "VERSION"
+    version_dir = backup_dir.listdir()[0]
+    assert version_dir.basename == "version"
+    version_file = version_dir.listdir()[0]
+    assert version_file.basename == "TEST" 
     assert version_file.readlines() == ["TEST"]
     filenames = [item.basename for item in backup_dir.join("db").listdir()]
     port = settings.DATABASES["secondary"]["PORT"]

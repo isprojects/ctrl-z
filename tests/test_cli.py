@@ -87,12 +87,14 @@ def test_version_full_backup(tmpdir, settings, config_writer):
 
     full_path = backups_base.join(backup_dir)
     subdirs = os.listdir(str(full_path))
-    assert sorted(subdirs) == ["VERSION", "backup.log", "db", "files" ]
+    assert sorted(subdirs) == [ "backup.log", "db", "files", "version" ]
+    version_dir = full_path.listdir()[1]
 
-    version_file = full_path.listdir()[-1]
-    assert version_file.isdir() == False
-    assert version_file.isfile() == True
-    assert version_file.basename == "VERSION"
+    assert version_dir.isdir() == True
+    assert version_dir.basename == "version"
+    version_file = version_dir.listdir()[0]
+    assert version_file.basename == "test" 
+    assert version_file.isfile() == True 
     assert version_file.readlines() == ["test"]
 
 

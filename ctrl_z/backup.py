@@ -10,7 +10,7 @@ from django.core.mail import send_mail
 from django.db import connections
 from django.utils.module_loading import import_string
 
-from .config import Config
+from ctrl_z.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -70,9 +70,15 @@ class Backup:
             logger.debug("Creating directory %s", path)
             os.makedirs(path)
     
-    def create_version_file(self, version):
-        with open(os.path.join(self.base_dir, "VERSION"), "w")  as fo:
+    def create_version_folder_and_file(self, version):
+        version_path = os.path.join(self.base_dir, "version")
+        if not os.path.exists(version_path):
+            os.makedirs(version_path)
+
+        with open(os.path.join(version_path,  version), "w")  as fo:
             fo.write(version)
+
+
 
     def full(self, db=True, skip_db=None, files=True, version = None):
         """
@@ -87,7 +93,7 @@ class Backup:
         self.rotate()
         self.create_directories()
         if version is not None:
-            self.create_version_file(version)
+            self.create_version_folder_and_file(version)
         if db:
             self.databases(skip_db=skip_db)
         if files:
