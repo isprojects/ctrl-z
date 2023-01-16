@@ -70,13 +70,14 @@ class Backup:
             logger.debug("Creating directory %s", path)
             os.makedirs(path)
     
+  
     def create_version_folder_and_file(self, version):
         version_path = os.path.join(self.base_dir, "version")
         if not os.path.exists(version_path):
-            os.makedirs(version_path)
-
-        with open(os.path.join(version_path,  version), "w")  as fo:
+            os.mkdir(version_path)
+        with open(os.path.join(version_path, version) + ".txt", "w")  as fo:
             fo.write(version)
+
 
 
 

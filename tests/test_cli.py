@@ -93,7 +93,7 @@ def test_version_full_backup(tmpdir, settings, config_writer):
     assert version_dir.isdir() == True
     assert version_dir.basename == "version"
     version_file = version_dir.listdir()[0]
-    assert version_file.basename == "test" 
+    assert version_file.basename == "test.txt" 
     assert version_file.isfile() == True 
     assert version_file.readlines() == ["test"]
 
