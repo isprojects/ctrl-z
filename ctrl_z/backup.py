@@ -63,6 +63,9 @@ class Backup:
         paths = (self.db_dir, self.files_dir)
 
         if version:
+            # in a k8s pod using the os.path pattern below would sometimes result in errors
+            # such as "file (does not) exist(s), directory (does not) exist(s)" for the version folder
+            # using makedirs below circumvents those issues. 
             os.makedirs(self.version_path, exist_ok=True)
 
         for path in paths:
