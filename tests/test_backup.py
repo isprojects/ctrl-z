@@ -86,3 +86,21 @@ def test_backup_all_db(tmpdir, settings, config_writer):
         "localhost.{port1}.test_ctrlz2.custom".format(port1=port1),
         "localhost.{port2}.test_ctrlz.custom".format(port2=port2),
     }
+
+
+def test_backup_db_version_file(tmpdir, settings, config_writer):
+    config_writer()
+    backup = Backup.from_config(str(tmpdir.join("config.yml")))
+
+    backup.full(db=True, files=False, version="TEST")
+
+    backup_dir = tmpdir.join("backups").listdir()[0]
+    version_dir = backup_dir.listdir()[0]
+    assert version_dir.basename == "version"
+    version_file = version_dir.listdir()[0]
+    assert version_file.basename == "TEST.txt" 
+    assert version_file.readlines() == ["TEST"]
+    filenames = [item.basename for item in backup_dir.join("db").listdir()]
+    port = settings.DATABASES["secondary"]["PORT"]
+    assert filenames == ["localhost.{port}.test_ctrlz2.custom".format(port=port)]
+
