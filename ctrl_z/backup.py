@@ -57,12 +57,12 @@ class Backup:
 
         logger.info("Finished restore of %s", self.base_dir)
 
-    def create_directories(self, version=None):
+    def create_directories(self, create_version_folder=False):
         logger.debug("Checking/creating folder tree for backups")
 
         paths = (self.db_dir, self.files_dir)
 
-        if version:
+        if create_version_folder:
             # in a k8s pod using the os.path pattern below would sometimes result in errors
             # such as "file (does not) exist(s), directory (does not) exist(s)" for the version folder
             # using makedirs below circumvents those issues. 
@@ -75,14 +75,10 @@ class Backup:
                 continue
             logger.debug("Creating directory %s", path)
             os.makedirs(path)
-    
   
     def create_version_file(self, version):
         with open(os.path.join(self.version_path, version + ".txt"), "w+")  as fo:
             fo.write(version)
-
-
-
 
     def full(self, db=True, skip_db=None, files=True, version = None):
         """
@@ -97,7 +93,7 @@ class Backup:
         self.rotate()
         if version:
             self.version_path = os.path.join(self.base_dir, "version")
-            self.create_directories(True)
+            self.create_directories(create_version_folder=True)
             self.create_version_file(version)
         else:
             self.create_directories()
