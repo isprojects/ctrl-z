@@ -10,7 +10,7 @@ from django.core.mail import send_mail
 from django.db import connections
 from django.utils.module_loading import import_string
 
-from .config import Config
+from ctrl_z.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -57,20 +57,30 @@ class Backup:
 
         logger.info("Finished restore of %s", self.base_dir)
 
-    def create_directories(self):
+    def create_directories(self, create_version_folder=False):
         logger.debug("Checking/creating folder tree for backups")
 
         paths = (self.db_dir, self.files_dir)
+
+        if create_version_folder:
+            # in a k8s pod using the os.path pattern below would sometimes result in errors
+            # such as "file (does not) exist(s), directory (does not) exist(s)" for the version folder
+            # using makedirs below circumvents those issues. 
+            os.makedirs(self.version_path, exist_ok=True)
+
         for path in paths:
             if os.path.exists(path):
                 if not os.path.isdir(path):
                     raise BackupError("Path %s exists, but is not a directory!" % path)
                 continue
-
             logger.debug("Creating directory %s", path)
             os.makedirs(path)
+  
+    def create_version_file(self, version):
+        with open(os.path.join(self.version_path, version + ".txt"), "w+")  as fo:
+            fo.write(version)
 
-    def full(self, db=True, skip_db=None, files=True):
+    def full(self, db=True, skip_db=None, files=True, version = None):
         """
         Run all the components of the full backup.
 
@@ -81,7 +91,13 @@ class Backup:
         """
         logger.info("Performing full backup")
         self.rotate()
-        self.create_directories()
+        if version:
+            self.version_path = os.path.join(self.base_dir, "version")
+            self.create_directories(create_version_folder=True)
+            self.create_version_file(version)
+        else:
+            self.create_directories()
+
         if db:
             self.databases(skip_db=skip_db)
         if files:
@@ -162,6 +178,9 @@ class Backup:
             self._restore_directory(path)
 
     def _get_file_directories(self) -> list:
+        if not (self.config.files.get("directories")):
+            return []
+
         directories = [
             getattr(settings, setting) for setting in self.config.files["directories"]
         ]
@@ -320,13 +339,16 @@ class Backup:
         logger.info("Database backup %s restored", backup_file)
 
     def _backup_directory(self, directory: str):
+        if not os.path.exists(directory):
+            logger.info("Source directory %s does not exist, skipping", directory)
+            return
+
         overwrite_existing = self.config.files["overwrite_existing_directory"]
 
         dirname = os.path.basename(directory)
         dest = os.path.join(self.files_dir, dirname)
 
         logger.info("Backing up %s to %s", directory, dest)
-
         if os.path.exists(dest):
             logger.debug(
                 "Target destination exists, which conflicts with shutil.copytree"
@@ -337,10 +359,6 @@ class Backup:
             else:
                 logger.info("Skipping %s", dest)
                 return
-
-        if not os.path.exists(directory):
-            logger.info("Source directory %s does not exist, skipping", directory)
-            return
 
         shutil.copytree(directory, dest)
 

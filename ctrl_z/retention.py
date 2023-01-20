@@ -95,5 +95,6 @@ class RetentionPolicy:
             to_delete.append(os.path.join(base, dir_name))
 
         for path in to_delete:
-            logger.info("Pruning backup directory %s", path)
-            shutil.rmtree(path)
+            if os.path.isdir(path):
+                logger.info("Pruning backup directory %s", path)
+                shutil.rmtree(path, True)
