@@ -23,15 +23,11 @@ class readable_dir(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         prospective_dir = values
         if not os.path.isdir(prospective_dir):
-            raise argparse.ArgumentTypeError(
-                "{0} is not a valid path".format(prospective_dir)
-            )
+            raise argparse.ArgumentTypeError(f"{prospective_dir} is not a valid path")
         if os.access(prospective_dir, os.R_OK):
             setattr(namespace, self.dest, prospective_dir)
         else:
-            raise argparse.ArgumentTypeError(
-                "{0} is not a readable dir".format(prospective_dir)
-            )
+            raise argparse.ArgumentTypeError(f"{prospective_dir} is not a readable dir")
 
 
 class db_alias(argparse.Action):
@@ -41,21 +37,13 @@ class db_alias(argparse.Action):
         # check correct format
         for value in values:
             if ":" not in value:
-                raise argparse.ArgumentTypeError(
-                    "{0} has an invalid format - it should be 'alias:value'".format(
-                        value
-                    )
-                )
+                raise argparse.ArgumentTypeError(f"{value} has an invalid format - it should be 'alias:value'")
 
         # check that aliases exist
         for value in values:
             alias, db_name = value.split(":", 1)
             if alias not in settings.DATABASES:
-                raise argparse.ArgumentTypeError(
-                    "Alias '{alias}' is not configured in the django settings".format(
-                        alias=alias
-                    )
-                )
+                raise argparse.ArgumentTypeError(f"Alias '{alias}' is not configured in the django settings")
             _values.append((alias, db_name))
 
         setattr(namespace, self.dest, _values)
@@ -98,9 +86,7 @@ class CLI:
         parser_gen_config = subparsers.add_parser(
             "generate_config", help="Generate a config file from the default config"
         )
-        parser_gen_config.add_argument(
-            "-o", "--output-file", help="Output file to write the config to"
-        )
+        parser_gen_config.add_argument("-o", "--output-file", help="Output file to write the config to")
 
         # backup creation
         parser_backup = subparsers.add_parser("backup", help="Create a backup")
@@ -120,8 +106,7 @@ class CLI:
         parser_backup.add_argument(
             "--skip-db",
             nargs="+",
-            help="Database aliases to skip - use multiple times for each "
-            "alias to skip",
+            help="Database aliases to skip - use multiple times for each " "alias to skip",
         )
         parser_backup.add_argument(
             "--no-files",
@@ -133,9 +118,7 @@ class CLI:
 
         # backup restoration
         parser_restore = subparsers.add_parser("restore", help="Restore a backup")
-        parser_restore.add_argument(
-            "backup_dir", action=readable_dir, help="Directory containing the backups"
-        )
+        parser_restore.add_argument("backup_dir", action=readable_dir, help="Directory containing the backups")
         parser_restore.add_argument(
             "--db-name",
             dest="db_names",
@@ -183,8 +166,7 @@ class CLI:
         parser_restore.add_argument(
             "--skip-db",
             nargs="+",
-            help="Database aliases to skip - use multiple times for each "
-            "alias to skip",
+            help="Database aliases to skip - use multiple times for each " "alias to skip",
         )
         parser_restore.add_argument(
             "--no-files",
@@ -206,18 +188,13 @@ class CLI:
         stdout=None,
         stderr=None,
     ):
-        from . import __version__
-
         if stdout:
             self.stdout = stdout
 
         if stderr:
             self.stderr = stderr
 
-        version_string = "CTRL-Z {version} - Backup and recovery tool\n".format(
-            version=__version__
-        )
-        self.stderr.write(version_string)
+        self.stderr.write("CTRL-Z - Backup and recovery tool\n")
 
         self._setup()
 
@@ -280,7 +257,7 @@ class CLI:
         # perform the backup
         has_errors = False
         try:
-            backup.full(db=backup_db, skip_db=skip_db, files=backup_files, version = version)
+            backup.full(db=backup_db, skip_db=skip_db, files=backup_files, version=version)
         except Exception:
             has_errors = True
             logger.exception("Backup failed")

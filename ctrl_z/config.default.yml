@@ -1,5 +1,4 @@
 ---
-
 # Default config.yml file - sane defaults for Linux systems
 # Used as a starting point for a custom backup file
 
@@ -11,7 +10,7 @@ logging:
   level: INFO
 
 retention_policy:
-  day_of_week: 0  # day of week to keep, 0 is Monday
+  day_of_week: 0 # day of week to keep, 0 is Monday
   days_to_keep: 7
   weeks_to_keep: 4
 
@@ -31,7 +30,7 @@ files:
     - MEDIA_ROOT
 
 # Which binaries to use for backup creation/restore
-pg_dump_binary: /usr/bin/pg_dump
-pg_restore_binary: /usr/bin/pg_restore
-dropdb_binary: /usr/bin/dropdb
-createdb_binary: /usr/bin/createdb
+pg_dump_binary: /opt/homebrew/Cellar/libpq/16.0/bin/pg_dump
+pg_restore_binary: /opt/homebrew/Cellar/libpq/16.0/bin/pg_restore
+dropdb_binary: /opt/homebrew/Cellar/libpq/16.0/bin/dropdb
+createdb_binary: /opt/homebrew/Cellar/libpq/16.0/bin/createdb

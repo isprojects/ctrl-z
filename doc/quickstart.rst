@@ -8,8 +8,8 @@ Installation
 Requirements
 ------------
 
-* Python 3.6 or higher
-* setuptools 30.3.0 or higher
+* Python 3.9 or 3.11
+* setuptools 63 or higher
 * PostgreSQL
 * Database user must have permissions to drop/create the target database(s)
   for DB restore
@@ -22,7 +22,7 @@ Install
     pip install ctrl-z
 
     For development: 
-    pip install -e .[tests,pep8,docs,release]
+    pip install -e ".[tests,pep8,docs,release]"
 
 
 

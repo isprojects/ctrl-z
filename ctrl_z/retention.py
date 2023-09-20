@@ -46,9 +46,7 @@ class RetentionPolicy:
         now = datetime.utcnow()
         datestamp = now.strftime(self.DATE_FORMAT)
         suffix = self.get_suffix(now)
-        return os.path.join(
-            base, "{datestamp}-{suffix}".format(datestamp=datestamp, suffix=suffix)
-        )
+        return os.path.join(base, f"{datestamp}-{suffix}")
 
     def rotate(self, base: str):
         """
@@ -65,31 +63,20 @@ class RetentionPolicy:
         dailies = rrule(DAILY, dtstart=daily_start, count=self.days_to_keep)
 
         days_since_day_of_week = now.weekday() - self.day_of_week
-        weekly_start = now - relativedelta(
-            weeks=self.weeks_to_keep - 1, days=days_since_day_of_week
-        )
+        weekly_start = now - relativedelta(weeks=self.weeks_to_keep - 1, days=days_since_day_of_week)
         weeklies = rrule(WEEKLY, dtstart=weekly_start, count=self.weeks_to_keep)
 
-        to_keep = sorted(
-            {
-                "{}-{}".format(dt.strftime(self.DATE_FORMAT), self.get_suffix(dt))
-                for dt in chain(dailies, weeklies)
-            }
-        )
+        to_keep = sorted({f"{dt.strftime(self.DATE_FORMAT)}-{self.get_suffix(dt)}" for dt in chain(dailies, weeklies)})
         logger.debug("Keeping backups from: %r", to_keep)
 
         to_delete = []
         for dir_name in os.listdir(base):
             if not self.is_backup_dir(dir_name):
-                logger.debug(
-                    "%s doesn't look like a backup directory, keeping it.", dir_name
-                )
+                logger.debug("%s doesn't look like a backup directory, keeping it.", dir_name)
                 continue
 
             if dir_name in to_keep:
-                logger.debug(
-                    "%s falls within the retention policy, keeping it", dir_name
-                )
+                logger.debug("%s falls within the retention policy, keeping it", dir_name)
                 continue
 
             to_delete.append(os.path.join(base, dir_name))

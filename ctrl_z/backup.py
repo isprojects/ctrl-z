@@ -51,9 +51,7 @@ class Backup:
         if files:
             self.restore_files()
         if db:
-            self.restore_databases(
-                skip_db=skip_db, db_names=db_names, db_hosts=db_hosts, db_ports=db_ports
-            )
+            self.restore_databases(skip_db=skip_db, db_names=db_names, db_hosts=db_hosts, db_ports=db_ports)
 
         logger.info("Finished restore of %s", self.base_dir)
 
@@ -65,7 +63,7 @@ class Backup:
         if create_version_folder:
             # in a k8s pod using the os.path pattern below would sometimes result in errors
             # such as "file (does not) exist(s), directory (does not) exist(s)" for the version folder
-            # using makedirs below circumvents those issues. 
+            # using makedirs below circumvents those issues.
             os.makedirs(self.version_path, exist_ok=True)
 
         for path in paths:
@@ -75,12 +73,12 @@ class Backup:
                 continue
             logger.debug("Creating directory %s", path)
             os.makedirs(path)
-  
+
     def create_version_file(self, version):
-        with open(os.path.join(self.version_path, version + ".txt"), "w+")  as fo:
+        with open(os.path.join(self.version_path, version + ".txt"), "w+") as fo:
             fo.write(version)
 
-    def full(self, db=True, skip_db=None, files=True, version = None):
+    def full(self, db=True, skip_db=None, files=True, version=None):
         """
         Run all the components of the full backup.
 
@@ -116,16 +114,11 @@ class Backup:
 
         logger.info("Sending report to %s", recipients)
 
-        with open(
-            os.path.join(self.base_dir, self.config.logging["filename"]), "r"
-        ) as logfile:
+        with open(os.path.join(self.base_dir, self.config.logging["filename"]), "r") as logfile:
             log_content = logfile.read()
 
         now = datetime.utcnow()
-        subject_template = (
-            "Backup {now} failed" if has_errors else "Backup {now} succeeded"
-        )
-        subject = subject_template.format(now=now)
+        subject = f"Backup {now} failed" if has_errors else "Backup {now} succeeded"
         send_mail(subject, log_content, settings.DEFAULT_FROM_EMAIL, recipients)
 
     def databases(self, skip_db=None):
@@ -181,9 +174,7 @@ class Backup:
         if not (self.config.files.get("directories")):
             return []
 
-        directories = [
-            getattr(settings, setting) for setting in self.config.files["directories"]
-        ]
+        directories = [getattr(settings, setting) for setting in self.config.files["directories"]]
         return directories
 
     def rotate(self):
@@ -202,7 +193,7 @@ class Backup:
 
     def _get_db_filename(self, db_config: dict) -> str:
         host, port, name = self._get_conn_params(db_config)
-        return "{host}.{port}.{name}.custom".format(host=host, port=port, name=name)
+        return f"{host}.{port}.{name}.custom"
 
     def _backup_database(self, db_config: dict):
         program = self.config.pg_dump_binary
@@ -213,7 +204,7 @@ class Backup:
         args = [
             program,
             "-Fc",  # custom format, guaranteed that it can be loaded in newer Postgres versions
-            "-f{outfile}".format(outfile=outfile),
+            f"-f{outfile}",
         ]
 
         logger.info("Dumping database %s (%s:%s)", name, host, port)
@@ -229,9 +220,7 @@ class Backup:
             }
         )
 
-        process = subprocess.Popen(
-            args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
+        process = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
 
         if stdout:
@@ -267,9 +256,9 @@ class Backup:
 
         if not os.path.isfile(backup_file):
             raise BackupError(
-                "Dump file '{backup_file}' does not exist. Possibly you need "
+                f"Dump file '{backup_file}' does not exist. Possibly you need "
                 "to provide the alias mapping if you're restoring to a "
-                "different database name.".format(backup_file=backup_file)
+                "different database name."
             )
 
         dropdb_args = [self.config.dropdb_binary, "--if-exists", db_config["NAME"]]
@@ -292,13 +281,11 @@ class Backup:
         )
 
         logger.info("Dropping the target database, if it exists")
-        
+
         for conn in connections.all():
             conn.close()
-        
-        process = subprocess.Popen(
-            dropdb_args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
+
+        process = subprocess.Popen(dropdb_args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
 
         if stdout:  # noqa
@@ -308,9 +295,7 @@ class Backup:
             logger.info("stderr: %s", stderr.decode())
 
         logger.info("Creating the target database")
-        process = subprocess.Popen(
-            createdb_args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
+        process = subprocess.Popen(createdb_args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
 
         if stdout:  # noqa
@@ -320,9 +305,7 @@ class Backup:
             logger.info("stderr: %s", stderr.decode())
 
         logger.info("Restoring the target database")
-        process = subprocess.Popen(
-            args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
+        process = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (stdout, stderr) = process.communicate()
 
         if stdout:
@@ -350,9 +333,7 @@ class Backup:
 
         logger.info("Backing up %s to %s", directory, dest)
         if os.path.exists(dest):
-            logger.debug(
-                "Target destination exists, which conflicts with shutil.copytree"
-            )
+            logger.debug("Target destination exists, which conflicts with shutil.copytree")
             if overwrite_existing:
                 logger.info("Replacing %s", dest)
                 shutil.rmtree(dest)

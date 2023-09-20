@@ -4,6 +4,7 @@ import tempfile
 from django.conf import settings
 
 import pytest
+
 from ctrl_z.config import DEFAULT_CONFIG_FILE, Config
 
 

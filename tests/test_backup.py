@@ -29,7 +29,12 @@ def test_backup_files_skip_directory(tmpdir, settings, config_writer, caplog):
     settings.MEDIA_ROOT = str(tmpdir.mkdir("media"))
     settings.NON_EXISTING_DIR = "NON_EXISTING_DIR"
 
-    config_writer(files={"directories": ["MEDIA_ROOT", "NON_EXISTING_DIR"], "overwrite_existing_directory": "yes"},)
+    config_writer(
+        files={
+            "directories": ["MEDIA_ROOT", "NON_EXISTING_DIR"],
+            "overwrite_existing_directory": "yes",
+        },
+    )
     backup = Backup.from_config(str(tmpdir.join("config.yml")))
 
     with caplog.at_level(logging.DEBUG):
@@ -68,7 +73,7 @@ def test_backup_skip_db(tmpdir, settings, config_writer):
     filenames = [item.basename for item in backup_dir.join("db").listdir()]
 
     port = settings.DATABASES["secondary"]["PORT"]
-    assert filenames == ["localhost.{port}.test_ctrlz2.custom".format(port=port)]
+    assert filenames == [f"localhost.{port}.test_ctrlz2.custom"]
 
 
 def test_backup_all_db(tmpdir, settings, config_writer):
@@ -82,10 +87,7 @@ def test_backup_all_db(tmpdir, settings, config_writer):
 
     port1 = settings.DATABASES["default"]["PORT"]
     port2 = settings.DATABASES["secondary"]["PORT"]
-    assert set(filenames) == {
-        "localhost.{port1}.test_ctrlz2.custom".format(port1=port1),
-        "localhost.{port2}.test_ctrlz.custom".format(port2=port2),
-    }
+    assert set(filenames) == {f"localhost.{port1}.test_ctrlz2.custom", f"localhost.{port2}.test_ctrlz.custom"}
 
 
 def test_backup_db_version_file(tmpdir, settings, config_writer):
@@ -98,9 +100,9 @@ def test_backup_db_version_file(tmpdir, settings, config_writer):
     version_dir = backup_dir.listdir()[0]
     assert version_dir.basename == "version"
     version_file = version_dir.listdir()[0]
-    assert version_file.basename == "TEST.txt" 
+    assert version_file.basename == "TEST.txt"
     assert version_file.readlines() == ["TEST"]
     filenames = [item.basename for item in backup_dir.join("db").listdir()]
-    port = settings.DATABASES["secondary"]["PORT"]
-    assert filenames == ["localhost.{port}.test_ctrlz2.custom".format(port=port)]
-
+    port_1 = settings.DATABASES["default"]["PORT"]
+    port_2 = settings.DATABASES["secondary"]["PORT"]
+    assert filenames == [f"localhost.{port_1}.test_ctrlz.custom", f"localhost.{port_2}.test_ctrlz2.custom"]

@@ -6,7 +6,7 @@
 Welcome to CTRL-Z's documentation!
 ===========================================
 
-|build-status| |coverage|
+|coverage|
 
 |python-versions| |django-versions| |pypi-version|
 
@@ -30,9 +30,6 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-.. |build-status| image:: https://travis-ci.org/isprojects/ctrl-z.svg?branch=develop
-    :target: https://travis-ci.org/isprojects/ctrl-z
 
 .. |coverage| image:: https://codecov.io/gh/isprojects/ctrl-z/branch/develop/graph/badge.svg
     :target: https://codecov.io/gh/isprojects/ctrl-z
