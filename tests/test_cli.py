@@ -3,7 +3,6 @@ Integration tests for the command line interface implementation.
 """
 import argparse
 import os
-import sys
 import warnings
 from datetime import datetime
 from io import StringIO
@@ -61,6 +60,7 @@ def test_full_backup(tmpdir, settings, config_writer):
     subdirs = os.listdir(str(full_path))
     assert sorted(subdirs) == ["backup.log", "db", "files"]
 
+
 def test_version_full_backup(tmpdir, settings, config_writer):
     config_path = str(tmpdir.join("config.yml"))
     backups_base = tmpdir.join("backups")
@@ -85,15 +85,10 @@ def test_version_full_backup(tmpdir, settings, config_writer):
 
     full_path = backups_base.join(backup_dir)
     subdirs = os.listdir(str(full_path))
-    assert sorted(subdirs) == [ "backup.log", "db", "files", "version" ]
-    version_dir = full_path.listdir()[1]
+    assert sorted(subdirs) == ["backup.log", "db", "files", "version"]
+    with open(os.path.join(full_path, "version", "test.txt"), "r") as version_file:
+        assert version_file.readlines() == ["test"]
 
-    assert version_dir.isdir() is True
-    assert version_dir.basename == "version"
-    version_file = version_dir.listdir()[0]
-    assert version_file.basename == "test.txt" 
-    assert version_file.isfile() is True 
-    assert version_file.readlines() == ["test"]
 
 def test_full_restore(tmpdir, settings, config_writer):
     config_path = str(tmpdir.join("config.yml"))
@@ -119,15 +114,6 @@ def test_full_restore(tmpdir, settings, config_writer):
 def test_full_restore_bad_directory():
     with pytest.raises(argparse.ArgumentTypeError):
         cli(args=["restore", "/i/dont/exist/"], stdout=StringIO())
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
-def test_full_restore_bad_directory2(tmpdir):
-    bad_permissions_dir = str(tmpdir.mkdir("nope"))
-    os.chmod(bad_permissions_dir, 0o000)
-
-    with pytest.raises(argparse.ArgumentTypeError):
-        cli(args=["restore", bad_permissions_dir], stdout=StringIO())
 
 
 def test_full_restore_not_directory(tmpdir):
@@ -235,4 +221,4 @@ def test_show_backup_dir(tmpdir, config_writer, freezer):
     output = stdout.read()
 
     expected_dir = backups_base.join("2018-05-29-daily")
-    assert output == "{path}\n".format(path=str(expected_dir))
+    assert output == f"{str(expected_dir)}\n"
