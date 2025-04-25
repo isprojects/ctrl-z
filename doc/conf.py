@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 current_dir = Path(__file__).parent.parent
-code_directory = current_dir / "ctrl-z"
+code_directory = current_dir / "ctrl_z"
 
 sys.path.insert(0, str(code_directory))
 

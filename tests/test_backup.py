@@ -67,7 +67,7 @@ def test_backup_skip_db(tmpdir, settings, config_writer):
     config_writer()
     backup = Backup.from_config(str(tmpdir.join("config.yml")))
 
-    backup.full(db=True, skip_db=["default"], files=False)
+    backup.full(db=True, skip_db=["default", "tirtiary"], files=False)
 
     backup_dir = tmpdir.join("backups").listdir()[0]
     filenames = [item.basename for item in backup_dir.join("db").listdir()]
@@ -87,7 +87,12 @@ def test_backup_all_db(tmpdir, settings, config_writer):
 
     port1 = settings.DATABASES["default"]["PORT"]
     port2 = settings.DATABASES["secondary"]["PORT"]
-    assert set(filenames) == {f"localhost.{port1}.test_ctrlz2.custom", f"localhost.{port2}.test_ctrlz.custom"}
+    port3 = settings.DATABASES["tirtiary"]["PORT"]
+    assert set(filenames) == {
+        f"localhost.{port1}.test_ctrlz2.custom",
+        f"localhost.{port2}.test_ctrlz.custom",
+        f"localhost.{port3}.ctrlz3.custom",
+    }
 
 
 def test_backup_db_version_file(tmpdir, settings, config_writer):
@@ -105,4 +110,9 @@ def test_backup_db_version_file(tmpdir, settings, config_writer):
     filenames = [item.basename for item in backup_dir.join("db").listdir()]
     port_1 = settings.DATABASES["default"]["PORT"]
     port_2 = settings.DATABASES["secondary"]["PORT"]
-    assert filenames == [f"localhost.{port_1}.test_ctrlz.custom", f"localhost.{port_2}.test_ctrlz2.custom"]
+    port_3 = settings.DATABASES["tirtiary"]["PORT"]
+    assert filenames == [
+        f"localhost.{port_1}.test_ctrlz.custom",
+        f"localhost.{port_3}.ctrlz3.custom",
+        f"localhost.{port_2}.test_ctrlz2.custom",
+    ]

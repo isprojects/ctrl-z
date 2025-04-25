@@ -18,7 +18,7 @@ def pytest_configure():
                 "USER": os.getenv("PGUSER", "ctrlz"),
                 "PASSWORD": os.getenv("PGPASSWORD", "ctrlz"),
                 "PORT": os.getenv("PGPORT", 5432),
-                # "HOST": "localhost"  # uncomment when developing locally
+                # "HOST": "localhost",  # uncomment when developing locally
             },
             "secondary": {
                 "ENGINE": "django.db.backends.postgresql",
@@ -26,7 +26,15 @@ def pytest_configure():
                 "USER": os.getenv("PGUSER", "ctrlz"),
                 "PASSWORD": os.getenv("PGPASSWORD", "ctrlz"),
                 "PORT": os.getenv("PGPORT", 5432),
-                # "HOST": "localhost"  # uncomment when developing locally
+                # "HOST": "localhost",  # uncomment when developing locally
+            },
+            "tirtiary": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": "ctrlz3",
+                "USER": os.getenv("PGUSER", "ctrlz"),
+                "PASSWORD": os.getenv("PGPASSWORD", "ctrlz"),
+                "PORT": os.getenv("PGPORT", 5432),
+                # "HOST": "localhost",  # uncomment when developing locally
             },
         },
         MEDIA_ROOT=tempfile.mkdtemp(),

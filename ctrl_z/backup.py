@@ -10,6 +10,8 @@ from django.core.mail import send_mail
 from django.db import connections
 from django.utils.module_loading import import_string
 
+from psycopg2 import sql
+
 from ctrl_z.config import Config
 
 logger = logging.getLogger(__name__)
@@ -303,6 +305,17 @@ class Backup:
 
         if stderr:  # noqa
             logger.info("stderr: %s", stderr.decode())
+
+        logger.info("Setting correct Schema owner")
+        conn = connections.create_connection("default")
+        cursor = conn.cursor()
+
+        query = sql.SQL("ALTER SCHEMA public OWNER TO {db_user}").format(
+            db_user=sql.Identifier(db_config["USER"]),
+        )
+        cursor.execute(query)
+        cursor.close()
+        conn.close()
 
         logger.info("Restoring the target database")
         process = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
