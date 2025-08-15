@@ -8,7 +8,7 @@ Installation
 Requirements
 ------------
 
-* Python 3.9 or 3.11
+* Python 3.11, 3.12 of 3.13
 * setuptools 63 or higher
 * PostgreSQL
 * Database user must have permissions to drop/create the target database(s)

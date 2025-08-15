@@ -4,10 +4,11 @@ Integration tests for the command line interface implementation.
 import argparse
 import os
 import warnings
-from datetime import datetime
+from datetime import datetime, timezone
 from io import StringIO
 
 import pytest
+from freezegun import freeze_time
 
 from ctrl_z import cli
 from ctrl_z.config import DEFAULT_CONFIG_FILE
@@ -48,7 +49,7 @@ def test_full_backup(tmpdir, settings, config_writer):
 
     cli(args=["backup"], config_file=config_path, stdout=StringIO())
 
-    expected_date = datetime.utcnow().strftime("%Y-%m-%d")
+    expected_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     # assert that the backup directory was created
     children = os.listdir(str(backups_base))
@@ -75,7 +76,7 @@ def test_version_full_backup(tmpdir, settings, config_writer):
 
     cli(args=["backup", "--version", "test"], config_file=config_path, stdout=StringIO())
 
-    expected_date = datetime.utcnow().strftime("%Y-%m-%d")
+    expected_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     # assert that the backup directory was created
     children = os.listdir(str(backups_base))
@@ -206,8 +207,8 @@ def test_db_restore_aliases(tmpdir, config_writer, mocker):
     )
 
 
-def test_show_backup_dir(tmpdir, config_writer, freezer):
-    freezer.move_to("2018-05-29")
+@freeze_time("2018-05-29")
+def test_show_backup_dir(tmpdir, config_writer):
     config_path = str(tmpdir.join("config.yml"))
     backups_base = tmpdir.mkdir("backups")
 

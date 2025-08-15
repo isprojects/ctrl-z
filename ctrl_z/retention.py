@@ -2,7 +2,7 @@ import logging
 import os
 import re
 import shutil
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from itertools import chain
 from typing import Union
 
@@ -42,8 +42,11 @@ class RetentionPolicy:
     def get_base_dir(self, base: str) -> str:
         """
         Figure out the folder name for the current backup.
+
+        :param str base: the base directory where all the date-stamped backups
+            are kept.
         """
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         datestamp = now.strftime(self.DATE_FORMAT)
         suffix = self.get_suffix(now)
         return os.path.join(base, f"{datestamp}-{suffix}")
@@ -52,11 +55,11 @@ class RetentionPolicy:
         """
         Perform the backup rotation according to the policy.
 
-        :param base: the base directory where all the date-stamped backups
-          are kept.
+        :param str base: the base directory where all the date-stamped backups
+            are kept.
         """
         # figure out which dailies to keep
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         # one less day, since we're generating 'today'
         daily_start = now - relativedelta(days=self.days_to_keep - 1)
