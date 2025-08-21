@@ -2,7 +2,7 @@ import logging
 import os
 import shutil
 import subprocess
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from django.conf import settings
@@ -102,9 +102,10 @@ class Backup:
             self.files()
         logger.info("Full backup completed")
 
-    def report(self, has_errors: bool):
+    def report(self, has_errors: bool) -> None:
         """
         Report on the success or failure of the backup.
+        :param boolean has_errors: boolean to determine if we have errors to report
         """
         if not self.config.report["enabled"]:
             logger.info("Report not enabled, aborting")
@@ -117,7 +118,7 @@ class Backup:
         with open(os.path.join(self.base_dir, self.config.logging["filename"]), "r") as logfile:
             log_content = logfile.read()
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         subject = f"Backup {now} failed" if has_errors else "Backup {now} succeeded"
         send_mail(subject, log_content, settings.DEFAULT_FROM_EMAIL, recipients)
 

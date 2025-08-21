@@ -30,7 +30,7 @@ files:
     - MEDIA_ROOT
 
 # Which binaries to use for backup creation/restore
-pg_dump_binary: /opt/homebrew/Cellar/libpq/16.0/bin/pg_dump
-pg_restore_binary: /opt/homebrew/Cellar/libpq/16.0/bin/pg_restore
-dropdb_binary: /opt/homebrew/Cellar/libpq/16.0/bin/dropdb
-createdb_binary: /opt/homebrew/Cellar/libpq/16.0/bin/createdb
+pg_dump_binary: /opt/homebrew/Cellar/libpq/17.6/bin/pg_dump
+pg_restore_binary: /opt/homebrew/Cellar/libpq/17.6/bin/pg_restore
+dropdb_binary: /opt/homebrew/Cellar/libpq/17.6/bin/dropdb
+createdb_binary: /opt/homebrew/Cellar/libpq/17.6/bin/createdb
