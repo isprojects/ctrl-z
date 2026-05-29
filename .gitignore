@@ -24,3 +24,8 @@ coverage.xml
 
 # docs
 doc/_build
+
+# System files
+.env
+.DS_Store
+thumbs.db

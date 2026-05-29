@@ -1,23 +1,31 @@
 """
 Test that the backup retention policy is correctly implemented.
 """
+
 from freezegun import freeze_time
 
 from ctrl_z.retention import RetentionPolicy
 
 
-@freeze_time("2018-06-27")  # it's Wednesday
+@freeze_time("2018-06-27 11:11:11")  # it's Wednesday
 def test_rotation(tmpdir):
     base = tmpdir.mkdir("backups")
+
+    # Format with "date only", testing for backwards compatibility
     base.mkdir("2018-06-24-daily")  # should be gone
     base.mkdir("2018-06-25-weekly")  # should be gone
     base.mkdir("2018-06-26-daily")  # should be kept
+
+    # Format with timestamp
+    base.mkdir("2018-06-24-10-10-10-daily")  # should be gone
+    base.mkdir("2018-06-25-10-10-10-weekly")  # should be gone
+    base.mkdir("2018-06-26-10-10-10-daily")  # should be kept
     policy = RetentionPolicy(day_of_week=0, days_to_keep=2, weeks_to_keep=0)
 
     policy.rotate(base=str(base))
 
     remaining = [local.basename for local in base.listdir()]
-    assert remaining == ["2018-06-26-daily"]
+    assert remaining == ["2018-06-26-daily", "2018-06-26-10-10-10-daily"]
 
 
 @freeze_time("2018-06-26")  # it's Tuesday
