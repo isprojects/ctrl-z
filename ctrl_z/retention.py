@@ -15,9 +15,9 @@ logger = logging.getLogger(__name__)
 class RetentionPolicy:
     __slots__ = ["day_of_week", "days_to_keep", "weeks_to_keep"]
 
-    DATE_FORMAT = "%Y-%m-%d"
+    DATE_FORMAT = "%Y-%m-%d-%H-%M-%S"
 
-    BACKUP_DIR_PATTERN = re.compile(r"^2[0-9]{3}-[0-1][0-9]-[0-3][0-9]-(daily|weekly)")
+    BACKUP_DIR_PATTERN = re.compile(r"^20.*-(daily|weekly)$")
 
     def __init__(self, **config):
         for key, value in config.items():
@@ -51,14 +51,13 @@ class RetentionPolicy:
         suffix = self.get_suffix(now)
         return os.path.join(base, f"{datestamp}-{suffix}")
 
-    def rotate(self, base: str):
+    def rotate(self, base: str) -> None:
         """
         Perform the backup rotation according to the policy.
 
-        :param str base: the base directory where all the date-stamped backups
-            are kept.
+        :param str base: the base directory where all the date-stamped backups are kept.
         """
-        # figure out which dailies to keep
+        # figure out which dailies and weeklies to keep
         now = datetime.now(timezone.utc)
 
         # one less day, since we're generating 'today'
@@ -69,22 +68,23 @@ class RetentionPolicy:
         weekly_start = now - relativedelta(weeks=self.weeks_to_keep - 1, days=days_since_day_of_week)
         weeklies = rrule(WEEKLY, dtstart=weekly_start, count=self.weeks_to_keep)
 
-        to_keep = sorted({f"{dt.strftime(self.DATE_FORMAT)}-{self.get_suffix(dt)}" for dt in chain(dailies, weeklies)})
-        logger.debug("Keeping backups from: %r", to_keep)
+        # Format with "date only" -> backwards compatibility
+        to_keep = sorted({f"{dt.strftime(self.DATE_FORMAT[:8])}" for dt in chain(dailies, weeklies)})
+        logger.info(f"Keeping backups from: {to_keep}")
 
         to_delete = []
         for dir_name in os.listdir(base):
             if not self.is_backup_dir(dir_name):
-                logger.debug("%s doesn't look like a backup directory, keeping it.", dir_name)
+                logger.info(f"{dir_name} doesn't look like a backup directory, keeping it.")
                 continue
 
-            if dir_name in to_keep:
-                logger.debug("%s falls within the retention policy, keeping it", dir_name)
+            if dir_name[:10] in to_keep:
+                logger.info(f"{dir_name} falls within the retention policy, keeping it")
                 continue
 
             to_delete.append(os.path.join(base, dir_name))
 
         for path in to_delete:
             if os.path.isdir(path):
-                logger.info("Pruning backup directory %s", path)
+                logger.info(f"Pruning backup directory {path}")
                 shutil.rmtree(path, True)

@@ -49,7 +49,7 @@ def test_full_backup(tmpdir, settings, config_writer):
 
     cli(args=["backup"], config_file=config_path, stdout=StringIO())
 
-    expected_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    expected_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")  # 4557
 
     # assert that the backup directory was created
     children = os.listdir(str(backups_base))
@@ -76,7 +76,7 @@ def test_version_full_backup(tmpdir, settings, config_writer):
 
     cli(args=["backup", "--version", "test"], config_file=config_path, stdout=StringIO())
 
-    expected_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    expected_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")  # 4557
 
     # assert that the backup directory was created
     children = os.listdir(str(backups_base))
@@ -207,7 +207,7 @@ def test_db_restore_aliases(tmpdir, config_writer, mocker):
     )
 
 
-@freeze_time("2018-05-29")
+@freeze_time("2018-05-29 17:28:12")
 def test_show_backup_dir(tmpdir, config_writer):
     config_path = str(tmpdir.join("config.yml"))
     backups_base = tmpdir.mkdir("backups")
@@ -221,5 +221,5 @@ def test_show_backup_dir(tmpdir, config_writer):
     stdout.seek(0)
     output = stdout.read()
 
-    expected_dir = backups_base.join("2018-05-29-daily")
+    expected_dir = backups_base.join("2018-05-29-17-28-12-daily")
     assert output == f"{str(expected_dir)}\n"
